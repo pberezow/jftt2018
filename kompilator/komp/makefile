@@ -1,7 +1,7 @@
 all: lexer.l parser.y
 	bison -d parser.y
 	flex -o lexer.lex.c lexer.l
-	g++ -o compiler parser.tab.c lexer.lex.c
+	g++ -std=c++11 -o compiler parser.tab.c lexer.lex.c
 	cat test.imp | ./compiler
 
 clean:

@@ -85,8 +85,11 @@ void print_indirect_code(struct indirect_code* code);
 	struct block* handle_commands(struct ast* commands_node);
 
 	struct block* handle_if(struct ast* if_node);
-	void handle_if_else(struct ast* if_else_node);
+	struct block* handle_if_else(struct ast* if_else_node);
 
+	struct block* handle_while(struct ast* while_node);
+
+	struct block* handle_do_while(struct ast* while_node);
 	
 	// DONE
 	void handle_condition(struct ast* condition_node, struct variable* end_label, vector<struct indirect_code*>* vec);
@@ -380,6 +383,7 @@ void print_blocks(struct block* code_block) {
 		}
 		code_block = code_block->next;
 	} while(code_block->next != NULL);
+	cout << "--------BLOCK--------" << endl;
 	for(int i = 0; i < code_block->codes.size(); i++) {
 		print_indirect_code(code_block->codes[i]);
 	}
@@ -541,22 +545,24 @@ struct block* handle_command(struct ast* command_node) {
 	struct block* code_block = newblock();
 	if(command_node->value.compare(":=") == 0) {
 		// ASSIGN
-		return handle_assign(command_node);
+		code_block = handle_assign(command_node);
+		return code_block;
 	} else if(command_node->value.compare("if_else") == 0) {
 		// IF ... THEN ... ELSE ... ENDIF
-
+		code_block = handle_if_else(command_node);
+		return code_block;
 	} else if(command_node->value.compare("if") == 0) {
 		// IF ... THEN ... ENDIF
 		code_block = handle_if(command_node);
-		// print_blocks(code_block);
-		cout << endl;
 		return code_block;
 	} else if(command_node->value.compare("while") == 0) {
 		// WHILE ... DO ... ENDWHILE
-
+		code_block = handle_while(command_node);
+		return code_block;
 	} else if(command_node->value.compare("do_while") == 0) {
 		// DO ... WHILE ... ENDDO
-
+		code_block = handle_do_while(command_node);
+		return code_block;
 	} else if(command_node->value.compare("for_to") == 0) {
 		// FOR ID FROM ... TO ... DO ... ENDFOR
 
@@ -565,10 +571,12 @@ struct block* handle_command(struct ast* command_node) {
 
 	} else if(command_node->value.compare("read") == 0) {
 		// READ ...
-		return handle_read(command_node);
+		code_block =  handle_read(command_node);
+		return code_block;
 	} else {
 		// WRITE ...
-		return handle_write(command_node);
+		code_block = handle_write(command_node);
+		return code_block;
 	}
 	return newblock();
 }
@@ -736,6 +744,7 @@ void _handle_neq(struct ast* condition_node, struct variable* end_label, vector<
 // \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
 
 
+// ###################### DONE ################
 struct block* handle_if(struct ast* if_node) {
 	struct variable* end_label = get_next_label_id();
 
@@ -749,27 +758,95 @@ struct block* handle_if(struct ast* if_node) {
 
 	struct block* tmp = condition_block;
 	while(tmp->next != NULL) {
-		// cout << "commands->prev ::: " << commands_block->prev << endl;
 		tmp = tmp->next;
 	}
 	struct indirect_code* lab = newindirect_code("@LABEL", end_label, NULL);
 	tmp->codes.push_back(lab);
 
-	// while(condition_block->prev != NULL) {
-	// 	condition_block = condition_block->prev;
-	// }
+	return condition_block;
+}
 
+// ###################### DONE ###################
+struct block* handle_if_else(struct ast* if_else_node) {
+	struct variable* else_label = get_next_label_id();
 
-	// print_blocks(condition_block);
-	// cout << endl << endl;
+	struct block* condition_block = newblock();
+	handle_condition(if_else_node->s_1, else_label, &(condition_block->codes));
+	
+	struct block* if_commands_block = handle_commands(if_else_node->s_2);
+	struct block* else_commands_block = handle_commands(if_else_node->s_3);
 
-	// for(int i=0; i < commands_block->codes.size(); i++) {
-	// 	cout << i << endl;
-	// 	print_indirect_code(commands_block->codes[i]);
-	// }
+	if_commands_block->prev = condition_block;
+	condition_block->next = if_commands_block;
+
+	struct block* tmp = condition_block;
+	while(tmp->next != NULL) {
+		tmp = tmp->next;
+	}
+	struct indirect_code* lab = newindirect_code("@LABEL", else_label, NULL);
+	tmp->codes.push_back(lab);
+
+	else_commands_block->prev = tmp;
+	tmp->next = else_commands_block;
 
 	return condition_block;
-	// return commands_block;
+}
+
+struct block* handle_while(struct ast* while_node) {
+	struct variable* end_label = get_next_label_id();
+	struct variable* loop_label = get_next_label_id();
+
+	struct block* condition_block = newblock();
+	struct indirect_code* lab_loop = newindirect_code("@LABEL", loop_label, NULL);
+	condition_block->codes.push_back(lab_loop);
+
+	handle_condition(while_node->s_1, end_label, &(condition_block->codes));
+	
+	struct block* commands_block = handle_commands(while_node->s_2);
+
+	condition_block->next = commands_block;
+	commands_block->prev = condition_block;
+
+	struct block* tmp = commands_block;
+	while(tmp->next != NULL) {
+		tmp = tmp->next;
+	}
+	struct indirect_code* jump = newindirect_code("@JUMP", loop_label, NULL);
+	tmp->codes.push_back(jump);
+	struct indirect_code* lab_end = newindirect_code("@LABEL", end_label, NULL);
+	tmp->codes.push_back(lab_end);
+
+	return condition_block;
+}
+
+struct block* handle_do_while(struct ast* do_while_node) {
+	struct variable* end_label = get_next_label_id();
+	struct variable* loop_label = get_next_label_id();
+
+	struct block* condition_block = newblock();
+	handle_condition(do_while_node->s_2, end_label, &(condition_block->codes));
+	
+	struct block* commands_block = handle_commands(do_while_node->s_1);
+	
+	struct indirect_code* lab_loop = newindirect_code("@LABEL", loop_label, NULL);
+	vector<struct indirect_code*>::iterator it;
+	it = commands_block->codes.begin();
+	commands_block->codes.insert(it, lab_loop);
+
+	struct block* tmp = commands_block;
+	while(tmp->next != NULL) {
+		tmp = tmp->next;
+	}
+
+	tmp->next = condition_block;
+	condition_block->prev = tmp;
+
+	struct indirect_code* jump = newindirect_code("@JUMP", loop_label, NULL);
+	condition_block->codes.push_back(jump);
+	struct indirect_code* lab_end = newindirect_code("@LABEL", end_label, NULL);
+	condition_block->codes.push_back(lab_end);
+
+	return commands_block;
 }
 
 // ################### DONE #####################
@@ -915,11 +992,4 @@ struct block* handle_write(struct ast* write_node) {
 
 	
 	return write_block;
-}
-
-void handle_if_else(struct ast* if_else_node) {
-	struct ast* condition = if_else_node->s_1;
-	struct ast* if_commands = if_else_node->s_2;
-	struct ast* else_commands = if_else_node->s_3;
-
 }

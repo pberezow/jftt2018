@@ -1,16 +1,7 @@
 DECLARE
     a; b;
 IN
-    IF a <= b THEN
-        WRITE a;
-        IF a <= b THEN
-            WRITE a;
-            READ b;
-            READ b;
-            READ b;
-        ENDIF
-        READ b;
-        READ b;
-        READ b;
-    ENDIF
+    DO
+        a := b;
+    WHILE a < b ENDDO
 END
