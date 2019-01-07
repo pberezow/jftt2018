@@ -8,3 +8,4 @@ clean:
 	rm lexer.lex.c
 	rm parser.tab.c
 	rm parser.tab.h
+	rm compiler

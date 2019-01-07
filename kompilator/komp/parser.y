@@ -4,6 +4,7 @@
 	#include <iostream>
 	#include <string>
 	#include <vector>
+	#include <map>
 	// #include <string.h>
 	#include <typeinfo>
 	using namespace std;
@@ -12,6 +13,11 @@
 
 	// long errno;
 	extern int lineno;
+
+// GLOBALS
+
+map<string, int> var;
+map<string, struct arr*> arr;
 
 // AST
 
@@ -55,6 +61,16 @@
 
 	struct variable* newvariable(string label, string id1, string id2, int num);
 
+// ARRAY
+	struct arr {
+		string id;
+		int from;
+		int to;
+	};
+
+	struct arr* newarray(string id, int from, int to);
+
+// HANDLERS
 
 	void handle_program(struct ast* root);
 	void handle_if(struct ast* if_node);
@@ -336,6 +352,7 @@ struct indirect_code* newindirect_code(string kw, struct variable* val1, struct 
 }
 
 // VARIABLE
+
 struct variable* newvariable(string label, string id1, string id2, int num) {
 	struct variable* a = (struct variable*)malloc(sizeof(struct variable));
 
@@ -348,6 +365,23 @@ struct variable* newvariable(string label, string id1, string id2, int num) {
 	a->id1 = id1;
 	a->id2 = id2;
 	a->number = num;
+
+	return a;
+}
+
+// ARRAY
+
+struct arr* newarray(string id, int from, int to) {
+	struct arr* a = (struct arr*)malloc(sizeof(struct arr));
+
+	if(!a) {
+		yyerror("Błąd. Koniec pamięci\n");
+        exit(1);
+	}
+
+	a->id = id;
+	a->from = from;
+	a->to = to;
 
 	return a;
 }
@@ -366,6 +400,11 @@ void handle_program(struct ast* root) {
 int semantic_analyse(struct ast* root) {
 	// TODO
 	return 1;
+}
+
+struct block* handle_assign(struct ast* asg_node) {
+	struct block* assign = newblock();
+
 }
 
 void handle_if(struct ast* if_node) {
