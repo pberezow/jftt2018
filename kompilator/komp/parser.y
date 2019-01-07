@@ -15,9 +15,16 @@
 	extern int lineno;
 
 // GLOBALS
+int label_id = 0;
 
 map<string, int> var;
 map<string, struct arr*> arr;
+
+struct variable* get_next_label_id();
+
+// PRINTS
+void print_blocks(struct block* code_block);
+void print_indirect_code(struct indirect_code* code);
 
 // AST
 
@@ -54,7 +61,7 @@ map<string, struct arr*> arr;
 // VARIABLE - used in indirect code
 	struct variable {
 		string label; // [VAR, REG, ARR, CONST]
-		string id1; // for var name
+		string id1; // for var name / reg name
 		string id2; // for arr idx
 		int number; // for const value
 	};
@@ -78,7 +85,17 @@ map<string, struct arr*> arr;
 	struct block* handle_condition(struct ast* condition_node, int commands_len);
 	struct block* handle_commands(struct ast* commands_node);
 
+	//DONE - wczytywanie
 	struct indirect_code* handle_value(struct ast* value_node, string reg);
+	//DONE - zapisywanie
+	struct indirect_code* handle_store(struct ast* value_node, string reg);
+	//DONE - dzialania
+	void handle_expression(struct ast* exp_node, string result_reg, vector<struct indirect_code*>* vec);
+	//DONE - przypisanie a := b + c
+	struct block* handle_assign(struct ast* asg_node);
+
+	//IN PROGRESS - 
+	struct block* handle_command(struct ast* command_node);
 
 	int semantic_analyse(struct ast* root);
 %}
@@ -115,7 +132,7 @@ map<string, struct arr*> arr;
 program: 
 	DECLARE declarations IN commands END
 					{
-						$$ = newast("program", $2, $4, NULL, NULL, " ", 0);
+						$$ = newast("program", $2, $4, NULL, NULL, "", 0);
 						handle_program($$);
 						cout << "END" << endl;
 					}
@@ -130,8 +147,8 @@ declarations:
 |	declarations ID'('NUM':'NUM')'
 					{
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, $2, 0);
-						struct ast* num1 = newast("num", NULL, NULL, NULL, NULL, " ", $4);
-						struct ast* num2 = newast("num", NULL, NULL, NULL, NULL, " ", $6);
+						struct ast* num1 = newast("num", NULL, NULL, NULL, NULL, "", $4);
+						struct ast* num2 = newast("num", NULL, NULL, NULL, NULL, "", $6);
 						$$ = newast("declarations", $1, id, num1, num2, "dec_arr", 0);
 					}
 | 					{
@@ -143,11 +160,11 @@ commands:
 	commands command
 					{
 
-						$$ = newast("commands", $1, $2, NULL, NULL, " ", 0);
+						$$ = newast("commands", $1, $2, NULL, NULL, "", 0);
 					}
 |	command
 					{
-						$$ = newast("commands", $1, NULL, NULL, NULL, " ", 0);
+						$$ = newast("commands", $1, NULL, NULL, NULL, "", 0);
 					}
 ;
 
@@ -249,12 +266,12 @@ condition:
 value:
 	NUM
 					{
-						struct ast* num = newast("num", NULL, NULL, NULL, NULL, " ", $1);
-						$$ = newast("value", num, NULL, NULL, NULL, " ", 0);
+						struct ast* num = newast("num", NULL, NULL, NULL, NULL, "", $1);
+						$$ = newast("value", num, NULL, NULL, NULL, "", 0);
 					}
 |	identifier
 					{
-						$$ = newast("value", $1, NULL, NULL, NULL, " ", 0);
+						$$ = newast("value", $1, NULL, NULL, NULL, "", 0);
 					}
 ;
 
@@ -262,19 +279,19 @@ identifier:
 	ID
 					{
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, $1, 0);
-						$$ = newast("identifier_id", id, NULL, NULL, NULL, " ", 0);
+						$$ = newast("identifier_id", id, NULL, NULL, NULL, "", 0);
 					}
 |	ID'('ID')'
 					{
 						struct ast* id1 = newast("id", NULL, NULL, NULL, NULL, $1, 0);
 						struct ast* id2 = newast("id", NULL, NULL, NULL, NULL, $3, 0);
-						$$ = newast("identifier_id_id", id1, id2, NULL, NULL, " ", 0);
+						$$ = newast("identifier_id_id", id1, id2, NULL, NULL, "", 0);
 					}
 |	ID'('NUM')'
 					{
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, $1, 0);
-						struct ast* num = newast("num", NULL, NULL, NULL, NULL, " ", $3);
-						$$ = newast("identifier_id_num", id, num, NULL, NULL, " ", 0);
+						struct ast* num = newast("num", NULL, NULL, NULL, NULL, "", $3);
+						$$ = newast("identifier_id_num", id, num, NULL, NULL, "", 0);
 					}
 ;
 
@@ -295,6 +312,13 @@ void yyerror(char const *s){
 	exit(1);
 }
 
+// LABEL ITERATOR
+struct variable* get_next_label_id() {
+	struct variable* label = newvariable("", "", "", label_id);
+	label_id++;
+
+	return label;
+}
 
 // AST
 
@@ -313,6 +337,7 @@ struct ast* newast(string type, struct ast* s_1, struct ast* s_2, struct ast* s_
 	a->s_2 = s_2;
 	a->s_3 = s_3;
 	a->s_4 = s_4;
+	if(!value.empty())
     a->value = value;
 	a->number = number;
 
@@ -334,6 +359,17 @@ struct block* newblock() {
 	a->next = NULL;
 }
 
+void print_blocks(struct block* code_block) {
+
+	do {
+		cout << "--------BLOCK--------" << endl;
+		for(int i = 0; i < code_block->codes.size(); i++) {
+			print_indirect_code(code_block->codes[i]);
+		}
+		code_block = code_block->next;
+	} while(code_block->next != NULL);
+}
+
 // INDIRECT CODE
 
 struct indirect_code* newindirect_code(string kw, struct variable* val1, struct variable* val2) {
@@ -351,6 +387,18 @@ struct indirect_code* newindirect_code(string kw, struct variable* val1, struct 
 	return a;
 }
 
+void print_indirect_code(struct indirect_code* code) {
+	cout << code->kw << " VAL1: ";
+	if(code->val1 != NULL) {
+		cout << code->val1->label;
+	}
+	cout << " VAL2: ";
+	if(code->val2 != NULL) {
+		cout << code->val2->label;
+	}
+	cout << endl;
+}
+
 // VARIABLE
 
 struct variable* newvariable(string label, string id1, string id2, int num) {
@@ -361,10 +409,14 @@ struct variable* newvariable(string label, string id1, string id2, int num) {
         exit(1);
 	}
 
+	if(!label.empty())
 	a->label = label;
+	if(!id1.empty())
 	a->id1 = id1;
+	if(!id2.empty())
 	a->id2 = id2;
 	a->number = num;
+
 
 	return a;
 }
@@ -393,7 +445,8 @@ void handle_program(struct ast* root) {
 		cout << "ERROR! SEMANTIC ANALYSIS" << endl;
 		return;
 	}
-	// handle_value(root, "asd");
+	struct block* b = handle_commands(root->s_2);
+	print_blocks(b);
 	
 }
 
@@ -402,87 +455,222 @@ int semantic_analyse(struct ast* root) {
 	return 1;
 }
 
-struct block* handle_assign(struct ast* asg_node) {
-	struct block* assign = newblock();
 
-}
-
-void handle_if(struct ast* if_node) {
-	struct ast* condition = if_node->s_1;
-	struct ast* commands = if_node->s_2;
+// void handle_if(struct ast* if_node) {
+// 	struct ast* condition = if_node->s_1;
+// 	struct ast* commands = if_node->s_2;
 	
-	struct block* commands_block = handle_commands(commands);
+// 	struct block* commands_block = handle_commands(commands);
 
 	
 	
-}
+// }
 
 struct block* handle_commands(struct ast* commands_node) {
-	return newblock();
-}
-
-struct block* handle_condition(struct ast* condition_node, int commands_len) { 
-	struct block* condition = newblock();
-
-	if(condition_node->value.compare(">") == 0) {
-		struct ast* tmp = condition_node->s_1;
-		condition_node->s_1 = condition_node->s_2;
-		condition_node->s_2 = tmp;
-		condition_node->value = "<";
-	} else if(condition_node->value.compare(">=") == 0) {
-		struct ast* tmp = condition_node->s_1;
-		condition_node->s_1 = condition_node->s_2;
-		condition_node->s_2 = tmp;
-		condition_node->value = "<=";
-	} else {
-		// condition->codes.push_back(handle_value(condition_node->s_1) + condition_node->value + handle_value(s_2));
+	// MOZE DO POPRAWY? SAM NIE WIEM
+	// BUDUJE SIE OD OSTATNIEJ INSTRUKCJI
+	struct block* code_block = newblock();
+	if(commands_node == NULL) { // teoretycznie niepotrzebne
+		// PUSTE COMMANDS
+		cout << "NULL" << endl;
+		return code_block;
 	}
 
-	// condition->codes.push_back(handle_value(condition_node->s_1) + condition_node->value + handle_value(s_2));
+	while(commands_node->s_2 != NULL) {
+		code_block->prev = handle_command(commands_node->s_2);
+		code_block->prev->next = code_block;
+
+		commands_node = commands_node->s_1;
+		code_block = code_block->prev;
+
+	}
 	
-	if(condition_node->value.compare("<") == 0) {
-		// condition->codes.push_back("");
-	} else if(condition_node->value.compare("<=") == 0) {
+	code_block->prev = handle_command(commands_node->s_1);
+	code_block->prev->next = code_block;
 
-	} else if(condition_node->value.compare("==") == 0) {
-
-	} else if(condition_node->value.compare("!=") == 0) {
-
-	} else {
-
-	}
-
-
+	// while(code_block->prev != NULL) {
+	// 	code_block = code_block->prev;
+	// }
+	return code_block->prev;
 }
 
+// struct block* handle_condition(struct ast* condition_node, int commands_len) { 
+// 	struct block* condition = newblock();
+
+// 	if(condition_node->value.compare(">") == 0) {
+// 		struct ast* tmp = condition_node->s_1;
+// 		condition_node->s_1 = condition_node->s_2;
+// 		condition_node->s_2 = tmp;
+// 		condition_node->value = "<";
+// 	} else if(condition_node->value.compare(">=") == 0) {
+// 		struct ast* tmp = condition_node->s_1;
+// 		condition_node->s_1 = condition_node->s_2;
+// 		condition_node->s_2 = tmp;
+// 		condition_node->value = "<=";
+// 	} else {
+// 		// condition->codes.push_back(handle_value(condition_node->s_1) + condition_node->value + handle_value(s_2));
+// 	}
+
+// 	// condition->codes.push_back(handle_value(condition_node->s_1) + condition_node->value + handle_value(s_2));
+	
+// 	if(condition_node->value.compare("<") == 0) {
+// 		// condition->codes.push_back("");
+// 	} else if(condition_node->value.compare("<=") == 0) {
+
+// 	} else if(condition_node->value.compare("==") == 0) {
+
+// 	} else if(condition_node->value.compare("!=") == 0) {
+
+// 	} else {
+
+// 	}
+
+
+// }
+
+struct block* handle_command(struct ast* command_node) {
+	struct block* code_block = newblock();
+	if(command_node->value.compare(":=") == 0) {
+		// ASSIGN
+		code_block = handle_assign(command_node);
+	} else if(command_node->value.compare("if_else") == 0) {
+		// IF ... THEN ... ELSE ... ENDIF
+
+	} else if(command_node->value.compare("if") == 0) {
+		// IF ... THEN ... ENDIF
+
+	} else if(command_node->value.compare("while") == 0) {
+		// WHILE ... DO ... ENDWHILE
+
+	} else if(command_node->value.compare("do_while") == 0) {
+		// DO ... WHILE ... ENDDO
+
+	} else if(command_node->value.compare("for_to") == 0) {
+		// FOR ID FROM ... TO ... DO ... ENDFOR
+
+	} else if(command_node->value.compare("for_downto") == 0) {
+		// FOR ID FROM ... DOWNTO ... DO ... ENDFOR
+
+	} else if(command_node->value.compare("read") == 0) {
+		// READ ...
+
+	} else {
+		// WRITE ...
+
+	}
+	return code_block;
+}
+
+// ################### DONE #####################
+struct block* handle_assign(struct ast* asg_node) {
+	struct block* asg = newblock();
+
+	handle_expression(asg_node->s_2, "B", &(asg->codes));
+	struct indirect_code* code = handle_store(asg_node->s_2->s_1, "B");
+	asg->codes.push_back(code);
+	return asg;
+}
+
+// #################### DONE ##########################
+void handle_expression(struct ast* exp_node, string result_reg, vector<struct indirect_code*>* vec) {
+	if(exp_node->value.compare("value") == 0) {
+		// stała
+		struct indirect_code* var1 = handle_value(exp_node->s_1, result_reg);
+		//
+		// TU MOZE NIE DZIALAC
+		// FIXME
+		(*vec).push_back(var1);
+	} else {
+		// wyrazenie
+		struct indirect_code* var1 = handle_value(exp_node->s_1, result_reg);
+		struct indirect_code* var2 = handle_value(exp_node->s_2, "C");
+		(*vec).push_back(var1);
+		(*vec).push_back(var2);
+
+		struct variable* reg1 = newvariable("REG", result_reg, "", 0);
+		struct variable* reg2 = newvariable("REG", "C", "", 0);
+		if(exp_node->value.compare("+") == 0) { // + dodawanie
+			struct indirect_code* add = newindirect_code("ADD", reg1, reg2);
+			(*vec).push_back(add);
+		} else if(exp_node->value.compare("-") == 0) { // - odejmowanie
+			struct indirect_code* sub = newindirect_code("SUB", reg1, reg2);
+			(*vec).push_back(sub);
+		} else if(exp_node->value.compare("*") == 0) { // * mnozenie
+			struct indirect_code* mul = newindirect_code("@MUL", reg1, reg2);
+			(*vec).push_back(mul);
+		} else if(exp_node->value.compare("/") == 0) { // / dzielenie
+			struct indirect_code* div = newindirect_code("@DIV", reg1, reg2);
+			(*vec).push_back(div);
+		} else { // % modulo
+			struct indirect_code* mod = newindirect_code("@MOD", reg1, reg2);
+			(*vec).push_back(mod);
+		}
+	}
+}
+
+// ########################### DONE ############################
 struct indirect_code* handle_value(struct ast* value_node, string reg) {
 	struct indirect_code* code;
-
-	if(value_node->s_1->type.compare("num")) {
+	if(value_node->s_1->type.compare("num") == 0) {
 		// numer (generowanie stalej)
-		struct variable* var1 = newvariable("CONST", NULL, NULL, value_node->s_1->number);
-		struct variable* var2 = newvariable("REG", reg, NULL, 0);
+		struct variable* var1 = newvariable("CONST", "", "", value_node->s_1->number);
+		struct variable* var2 = newvariable("REG", reg, "", 0);
 
 		code = newindirect_code("@LOAD", var1, var2);
 	} else {
-		if(value_node->s_1->type.compare("identifier_id")) {
+		if(value_node->s_1->type.compare("identifier_id") == 0) {
 			// zmienna
-			struct variable* var1 = newvariable("VAR", value_node->s_1->s_1->value, NULL, 0);
-			struct variable* var2 = newvariable("REG", reg, NULL, 0);
+			struct variable* var1 = newvariable("VAR", value_node->s_1->s_1->value, "", 0);
+			struct variable* var2 = newvariable("REG", reg, "", 0);
 
 			code = newindirect_code("@LOAD", var1, var2);
-		} else if(value_node->s_1->type.compare("identifier_id_id")) {
+		} else if(value_node->s_1->type.compare("identifier_id_id") == 0) {
 			// tablica id(id)
 			struct variable* var1 = newvariable("ARR", value_node->s_1->s_1->value, value_node->s_1->s_2->value, 0);
-			struct variable* var2 = newvariable("REG", reg, NULL, 0);
+			struct variable* var2 = newvariable("REG", reg, "", 0);
 
 			code = newindirect_code("@LOAD", var1, var2);
 		} else { // if(value_node->s_1->type.compare("identifier_id_num")) {
 			// tablica id(numer)
-			struct variable* var1 = newvariable("ARR", value_node->s_1->s_1->value, NULL, value_node->s_1->s_2->number);
-			struct variable* var2 = newvariable("REG", reg, NULL, 0);
+			struct variable* var1 = newvariable("ARR", value_node->s_1->s_1->value, "", value_node->s_1->s_2->number);
+			struct variable* var2 = newvariable("REG", reg, "", 0);
 
 			code = newindirect_code("@LOAD", var1, var2);
+		} 
+	}
+	return code;
+}
+
+// ##################### DONE #########################
+struct indirect_code* handle_store(struct ast* value_node, string reg) {
+	struct indirect_code* code;
+
+	if(value_node->s_1->type.compare("num") == 0) {
+		// numer (generowanie stalej)
+		// tego nie bedzie
+		struct variable* var1 = newvariable("REG", reg, "", 0);
+		struct variable* var2 = newvariable("CONST", "", "", value_node->s_1->number);
+
+		code = newindirect_code("@STORE", var1, var2);
+	} else {
+		if(value_node->s_1->type.compare("identifier_id") == 0) {
+			// zmienna
+			struct variable* var1 = newvariable("REG", reg, "", 0);
+			struct variable* var2 = newvariable("VAR", value_node->s_1->s_1->value, "", 0);
+
+			code = newindirect_code("@STORE", var1, var2);
+		} else if(value_node->s_1->type.compare("identifier_id_id") == 0) {
+			// tablica id(id)
+			struct variable* var1 = newvariable("REG", reg, "", 0);
+			struct variable* var2 = newvariable("ARR", value_node->s_1->s_1->value, value_node->s_1->s_2->value, 0);
+
+			code = newindirect_code("@STORE", var1, var2);
+		} else { // if(value_node->s_1->type.compare("identifier_id_num")) {
+			// tablica id(numer)
+			struct variable* var1 = newvariable("REG", reg, "", 0);
+			struct variable* var2 = newvariable("ARR", value_node->s_1->s_1->value, "", value_node->s_1->s_2->number);
+
+			code = newindirect_code("@STORE", var1, var2);
 		} 
 	}
 	return code;

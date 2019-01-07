@@ -1,0 +1,23 @@
+@LOAD <VAR1> <VAR2> :-
+    zaladuj do rejestru <VAR2> zmienna <VAR1>(z pamięci)
+
+@STORE <VAR1> <VAR2> :-
+    zapisz wartosc z rejestru <VAR1> do zmiennej <VAR2>(w pamięci) 
+
+@MUL <VAR1> <VAR2> :-
+    mnozenie liczby z rejestru <VAR1> i liczy z rejestru <VAR2>
+    wynik w <VAR1>
+
+@DIV <VAR1> <VAR2> :-
+    dzielenie liczby z rejestru <VAR1> i liczy z rejestru <VAR2>
+    wynik w <VAR1>
+
+@MOD <VAR1> <VAR2> :-
+    modulo liczby z rejestru <VAR1> i liczy z rejestru <VAR2>
+    wynik w <VAR1>
+
+@LABEL <VAR1> <VAR2> :-
+    labelka dla skoku, <VAR1> jest typu struct variable* 
+    i przechowuje unikalny indeks generowany przez funkcje 'get_next_label_id()'
+
+
