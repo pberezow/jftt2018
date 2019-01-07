@@ -20,4 +20,12 @@
     labelka dla skoku, <VAR1> jest typu struct variable* 
     i przechowuje unikalny indeks generowany przez funkcje 'get_next_label_id()'
 
+@JZERO
 
+@JUMP
+
+@COPY
+
+@GET
+
+@PUT
