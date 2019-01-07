@@ -53,7 +53,7 @@ map<string, struct arr*> arr;
 
 // VARIABLE - used in indirect code
 	struct variable {
-		string label; // [var, reg, arr, const]
+		string label; // [VAR, REG, ARR, CONST]
 		string id1; // for var name
 		string id2; // for arr idx
 		int number; // for const value
@@ -78,7 +78,7 @@ map<string, struct arr*> arr;
 	struct block* handle_condition(struct ast* condition_node, int commands_len);
 	struct block* handle_commands(struct ast* commands_node);
 
-	string handle_value(struct ast* value_node);
+	struct indirect_code* handle_value(struct ast* value_node, string reg);
 
 	int semantic_analyse(struct ast* root);
 %}
@@ -393,7 +393,7 @@ void handle_program(struct ast* root) {
 		cout << "ERROR! SEMANTIC ANALYSIS" << endl;
 		return;
 	}
-	handle_value(root);
+	// handle_value(root, "asd");
 	
 }
 
@@ -455,18 +455,37 @@ struct block* handle_condition(struct ast* condition_node, int commands_len) {
 
 }
 
-string handle_value(struct ast* value_node) {
+struct indirect_code* handle_value(struct ast* value_node, string reg) {
+	struct indirect_code* code;
+
 	if(value_node->s_1->type.compare("num")) {
-		return to_string(value_node->s_1->number);
-	} else if(value_node->s_1->type.compare("identifier_id")) {
-		return value_node->s_1->s_1->value;
-	} else if(value_node->s_1->type.compare("identifier_id_id")) {
-		return value_node->s_1->s_1->value + "(" + value_node->s_1->s_2->value + ")";
-	} else if(value_node->s_1->type.compare("identifier_id_num")) {
-		return value_node->s_1->s_1->value + "(" + to_string(value_node->s_1->s_2->number) + ")";
+		// numer (generowanie stalej)
+		struct variable* var1 = newvariable("CONST", NULL, NULL, value_node->s_1->number);
+		struct variable* var2 = newvariable("REG", reg, NULL, 0);
+
+		code = newindirect_code("@LOAD", var1, var2);
 	} else {
-		return "blad";
+		if(value_node->s_1->type.compare("identifier_id")) {
+			// zmienna
+			struct variable* var1 = newvariable("VAR", value_node->s_1->s_1->value, NULL, 0);
+			struct variable* var2 = newvariable("REG", reg, NULL, 0);
+
+			code = newindirect_code("@LOAD", var1, var2);
+		} else if(value_node->s_1->type.compare("identifier_id_id")) {
+			// tablica id(id)
+			struct variable* var1 = newvariable("ARR", value_node->s_1->s_1->value, value_node->s_1->s_2->value, 0);
+			struct variable* var2 = newvariable("REG", reg, NULL, 0);
+
+			code = newindirect_code("@LOAD", var1, var2);
+		} else { // if(value_node->s_1->type.compare("identifier_id_num")) {
+			// tablica id(numer)
+			struct variable* var1 = newvariable("ARR", value_node->s_1->s_1->value, NULL, value_node->s_1->s_2->number);
+			struct variable* var2 = newvariable("REG", reg, NULL, 0);
+
+			code = newindirect_code("@LOAD", var1, var2);
+		} 
 	}
+	return code;
 }
 
 
