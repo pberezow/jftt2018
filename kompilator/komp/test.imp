@@ -1,7 +1,8 @@
 DECLARE
     a; b;
 IN
-    FOR i FROM a TO 5 DO
-        x := a(3)/4;
-    ENDFOR
+    a := 5;
+    IF a > 3 THEN
+        b := 3;
+    ENDIF
 END

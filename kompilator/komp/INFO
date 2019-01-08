@@ -16,6 +16,14 @@
     modulo liczby z rejestru <VAR1> i liczy z rejestru <VAR2>
     wynik w <VAR1>
 
+SUB
+
+ADD
+
+DEC
+
+INC
+
 @LABEL <VAR1> <VAR2> :-
     labelka dla skoku, <VAR1> jest typu struct variable* 
     i przechowuje unikalny indeks generowany przez funkcje 'get_next_label_id()'
