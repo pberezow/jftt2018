@@ -16,12 +16,15 @@
 
 // GLOBALS
 int label_id = 0;
+int iterator_id = 0;
 // struct block* root;
 
 map<string, int> var;
 map<string, struct arr*> arr;
 
 struct variable* get_next_label_id();
+struct block* get_next_iter(struct ast* ID_node);
+
 
 // PRINTS
 void print_blocks(struct block* code_block);
@@ -89,8 +92,10 @@ void print_indirect_code(struct indirect_code* code);
 
 	struct block* handle_while(struct ast* while_node);
 
-	struct block* handle_do_while(struct ast* while_node);
+	struct block* handle_do_while(struct ast* do_while_node);
 	
+	struct block* handle_for_to(struct ast* for_to_node);
+
 	// DONE
 	void handle_condition(struct ast* condition_node, struct variable* end_label, vector<struct indirect_code*>* vec);
 	void _handle_lt(struct ast* condition_node, struct variable* end_label, vector<struct indirect_code*>* vec);
@@ -335,6 +340,25 @@ struct variable* get_next_label_id() {
 	return label;
 }
 
+// LOOP ITERATOR
+struct block* get_next_iter(struct ast* ID_node, struct ast* value_node) {
+	struct block* iter_block = newblock();
+	struct variable* iterator = newvariable("ITER", ID_node->value, "", 0);
+	// do mapy
+	var[ID_node->value] = iterator_id;
+
+	iterator_id++;
+
+	struct indirect_code* code = handle_value(value_node, "B");
+	iter_block->codes.push_back(code);
+
+	struct variable* reg_B = newvariable("REG", "B", "", 0);
+	code = newindirect_code("@STORE", reg_B, iterator);
+	iter_block->codes.push_back(code);
+
+	return iter_block;
+}
+
 // AST
 
 struct ast* newast(string type, struct ast* s_1, struct ast* s_2, struct ast* s_3, struct ast* s_4, string value, int number) {
@@ -565,7 +589,8 @@ struct block* handle_command(struct ast* command_node) {
 		return code_block;
 	} else if(command_node->value.compare("for_to") == 0) {
 		// FOR ID FROM ... TO ... DO ... ENDFOR
-
+		code_block = handle_for_to(command_node);
+		return code_block;
 	} else if(command_node->value.compare("for_downto") == 0) {
 		// FOR ID FROM ... DOWNTO ... DO ... ENDFOR
 
@@ -847,6 +872,61 @@ struct block* handle_do_while(struct ast* do_while_node) {
 	condition_block->codes.push_back(lab_end);
 
 	return commands_block;
+}
+
+struct block* handle_for_to(struct ast* for_to_node) {
+	struct variable* end_label = get_next_label_id();
+	struct variable* loop_label = get_next_label_id();
+
+	struct block* iter_block = get_next_iter(for_to_node->s_1, for_to_node->s_2);
+	
+	struct indirect_code* lab_loop = newindirect_code("@LABEL", loop_label, NULL);
+	iter_block->codes.push_back(lab_loop);
+
+	// CONDITION
+	struct block* condition_block = newblock();
+	struct variable* reg_B = newvariable("REG", "B", "", 0);
+	struct variable* reg_C = newvariable("REG", "C", "", 0);
+	struct variable* iterator = newvariable("ITER", for_to_node->s_1->value, "", 0);
+	
+	struct indirect_code* load_iter = newindirect_code("@LOAD", iterator, reg_B);
+	struct indirect_code* b = handle_value(for_to_node->s_3, "C");
+
+	condition_block->codes.push_back(load_iter);
+	condition_block->codes.push_back(b);
+
+	// b - a
+	struct indirect_code* sub = newindirect_code("SUB", reg_C, reg_B);
+	condition_block->codes.push_back(sub);
+	// JUMP -> @END
+	struct indirect_code* jzero = newindirect_code("@JZERO", reg_C, end_label);
+	condition_block->codes.push_back(jzero);
+
+	iter_block->next = condition_block;
+	condition_block->prev = iter_block;
+
+	// COMMANDS
+	struct block* commands_block = handle_commands(for_to_node->s_4);
+
+	condition_block->next = commands_block;
+	commands_block->prev = condition_block;
+	
+	struct block* tmp = commands_block;
+	while(tmp->next != NULL) {
+		tmp = tmp->next;
+	}
+
+	tmp->codes.push_back(load_iter);
+	struct indirect_code* dec = newindirect_code("INC", reg_B, NULL);
+	tmp->codes.push_back(dec);
+	struct indirect_code* store_iter = newindirect_code("@STORE", reg_B, iterator);
+	tmp->codes.push_back(store_iter);
+	struct indirect_code* jump = newindirect_code("@JUMP", loop_label, NULL);
+	tmp->codes.push_back(jump);
+	struct indirect_code* lab_end = newindirect_code("@LABEL", end_label, NULL);
+	tmp->codes.push_back(lab_end);
+
+	return iter_block;
 }
 
 // ################### DONE #####################

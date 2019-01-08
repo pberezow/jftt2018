@@ -81,12 +81,15 @@
 
 // GLOBALS
 int label_id = 0;
+int iterator_id = 0;
 // struct block* root;
 
 map<string, int> var;
 map<string, struct arr*> arr;
 
 struct variable* get_next_label_id();
+struct block* get_next_iter(struct ast* ID_node);
+
 
 // PRINTS
 void print_blocks(struct block* code_block);
@@ -154,8 +157,10 @@ void print_indirect_code(struct indirect_code* code);
 
 	struct block* handle_while(struct ast* while_node);
 
-	struct block* handle_do_while(struct ast* while_node);
+	struct block* handle_do_while(struct ast* do_while_node);
 	
+	struct block* handle_for_to(struct ast* for_to_node);
+
 	// DONE
 	void handle_condition(struct ast* condition_node, struct variable* end_label, vector<struct indirect_code*>* vec);
 	void _handle_lt(struct ast* condition_node, struct variable* end_label, vector<struct indirect_code*>* vec);
@@ -179,7 +184,7 @@ void print_indirect_code(struct indirect_code* code);
 
 	int semantic_analyse(struct ast* root);
 
-#line 183 "parser.tab.c" /* yacc.c:339  */
+#line 188 "parser.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -249,13 +254,13 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 118 "parser.y" /* yacc.c:355  */
+#line 123 "parser.y" /* yacc.c:355  */
 
 	struct ast* a;
 	char* string;
 	int number;
 
-#line 259 "parser.tab.c" /* yacc.c:355  */
+#line 264 "parser.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -272,7 +277,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 276 "parser.tab.c" /* yacc.c:358  */
+#line 281 "parser.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -572,10 +577,10 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   148,   148,   157,   162,   169,   175,   180,   187,   191,
-     195,   199,   203,   207,   212,   217,   221,   228,   232,   236,
-     240,   244,   248,   255,   259,   263,   267,   271,   275,   282,
-     287,   294,   299,   305
+       0,   153,   153,   162,   167,   174,   180,   185,   192,   196,
+     200,   204,   208,   212,   217,   222,   226,   233,   237,   241,
+     245,   249,   253,   260,   264,   268,   272,   276,   280,   287,
+     292,   299,   304,   310
 };
 #endif
 
@@ -1421,278 +1426,278 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 149 "parser.y" /* yacc.c:1646  */
+#line 154 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("program", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "", 0);
 						handle_program((yyval.a));
 						cout << "END" << endl;
 					}
-#line 1431 "parser.tab.c" /* yacc.c:1646  */
+#line 1436 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 158 "parser.y" /* yacc.c:1646  */
+#line 163 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-1].string), 0);
 						(yyval.a) = newast("declarations", (yyvsp[-2].a), id, NULL, NULL, "dec_var", 0);
 					}
-#line 1440 "parser.tab.c" /* yacc.c:1646  */
+#line 1445 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 163 "parser.y" /* yacc.c:1646  */
+#line 168 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-5].string), 0);
 						struct ast* num1 = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[-3].number));
 						struct ast* num2 = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[-1].number));
 						(yyval.a) = newast("declarations", (yyvsp[-6].a), id, num1, num2, "dec_arr", 0);
 					}
-#line 1451 "parser.tab.c" /* yacc.c:1646  */
+#line 1456 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 169 "parser.y" /* yacc.c:1646  */
+#line 174 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) =  newast("NULL", NULL, NULL, NULL, NULL, "NULL", 0);
 					}
-#line 1459 "parser.tab.c" /* yacc.c:1646  */
+#line 1464 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 176 "parser.y" /* yacc.c:1646  */
+#line 181 "parser.y" /* yacc.c:1646  */
     {
 
 						(yyval.a) = newast("commands", (yyvsp[-1].a), (yyvsp[0].a), NULL, NULL, "", 0);
 					}
-#line 1468 "parser.tab.c" /* yacc.c:1646  */
+#line 1473 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 181 "parser.y" /* yacc.c:1646  */
+#line 186 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("commands", (yyvsp[0].a), NULL, NULL, NULL, "", 0);
 					}
-#line 1476 "parser.tab.c" /* yacc.c:1646  */
+#line 1481 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 188 "parser.y" /* yacc.c:1646  */
+#line 193 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, ":=", 0);
 					}
-#line 1484 "parser.tab.c" /* yacc.c:1646  */
+#line 1489 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 192 "parser.y" /* yacc.c:1646  */
+#line 197 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("command", (yyvsp[-5].a), (yyvsp[-3].a), (yyvsp[-1].a), NULL, "if_else", 0);
                     }
-#line 1492 "parser.tab.c" /* yacc.c:1646  */
+#line 1497 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 196 "parser.y" /* yacc.c:1646  */
+#line 201 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "if", 0);
                     }
-#line 1500 "parser.tab.c" /* yacc.c:1646  */
+#line 1505 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 200 "parser.y" /* yacc.c:1646  */
+#line 205 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "while", 0);
                     }
-#line 1508 "parser.tab.c" /* yacc.c:1646  */
+#line 1513 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 204 "parser.y" /* yacc.c:1646  */
+#line 209 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "do_while", 0);
 					}
-#line 1516 "parser.tab.c" /* yacc.c:1646  */
+#line 1521 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 208 "parser.y" /* yacc.c:1646  */
+#line 213 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-7].string), 0);
 						(yyval.a) = newast("command", id, (yyvsp[-5].a), (yyvsp[-3].a), (yyvsp[-1].a), "for_to", 0);
 		 			}
-#line 1525 "parser.tab.c" /* yacc.c:1646  */
+#line 1530 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 213 "parser.y" /* yacc.c:1646  */
+#line 218 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-7].string), 0);
 						(yyval.a) = newast("command", id, (yyvsp[-5].a), (yyvsp[-3].a), (yyvsp[-1].a), "for_downto", 0);
                     }
-#line 1534 "parser.tab.c" /* yacc.c:1646  */
+#line 1539 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 218 "parser.y" /* yacc.c:1646  */
+#line 223 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("command", (yyvsp[-1].a), NULL, NULL, NULL, "read", 0);
 					}
-#line 1542 "parser.tab.c" /* yacc.c:1646  */
+#line 1547 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 222 "parser.y" /* yacc.c:1646  */
+#line 227 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("command", (yyvsp[-1].a), NULL, NULL, NULL, "write", 0);
 					}
-#line 1550 "parser.tab.c" /* yacc.c:1646  */
+#line 1555 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 229 "parser.y" /* yacc.c:1646  */
+#line 234 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("expression", (yyvsp[0].a), NULL, NULL, NULL, "value", 0);
 					}
-#line 1558 "parser.tab.c" /* yacc.c:1646  */
+#line 1563 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 233 "parser.y" /* yacc.c:1646  */
+#line 238 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "+", 0);
 					}
-#line 1566 "parser.tab.c" /* yacc.c:1646  */
+#line 1571 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 237 "parser.y" /* yacc.c:1646  */
+#line 242 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "-", 0);
 					}
-#line 1574 "parser.tab.c" /* yacc.c:1646  */
+#line 1579 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 241 "parser.y" /* yacc.c:1646  */
+#line 246 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "*", 0);
 					}
-#line 1582 "parser.tab.c" /* yacc.c:1646  */
+#line 1587 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 245 "parser.y" /* yacc.c:1646  */
+#line 250 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "/", 0);
 					}
-#line 1590 "parser.tab.c" /* yacc.c:1646  */
+#line 1595 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 249 "parser.y" /* yacc.c:1646  */
+#line 254 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "%", 0);
 					}
-#line 1598 "parser.tab.c" /* yacc.c:1646  */
+#line 1603 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 256 "parser.y" /* yacc.c:1646  */
+#line 261 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "=", 0);
 					}
-#line 1606 "parser.tab.c" /* yacc.c:1646  */
+#line 1611 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 260 "parser.y" /* yacc.c:1646  */
+#line 265 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "!=", 0);
 					}
-#line 1614 "parser.tab.c" /* yacc.c:1646  */
+#line 1619 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 264 "parser.y" /* yacc.c:1646  */
+#line 269 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "<", 0);
 					}
-#line 1622 "parser.tab.c" /* yacc.c:1646  */
+#line 1627 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 268 "parser.y" /* yacc.c:1646  */
+#line 273 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, ">", 0);
 					}
-#line 1630 "parser.tab.c" /* yacc.c:1646  */
+#line 1635 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 272 "parser.y" /* yacc.c:1646  */
+#line 277 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "<=", 0);
 					}
-#line 1638 "parser.tab.c" /* yacc.c:1646  */
+#line 1643 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 276 "parser.y" /* yacc.c:1646  */
+#line 281 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, ">=", 0);
 					}
-#line 1646 "parser.tab.c" /* yacc.c:1646  */
+#line 1651 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 283 "parser.y" /* yacc.c:1646  */
+#line 288 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* num = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[0].number));
 						(yyval.a) = newast("value", num, NULL, NULL, NULL, "", 0);
 					}
-#line 1655 "parser.tab.c" /* yacc.c:1646  */
+#line 1660 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 288 "parser.y" /* yacc.c:1646  */
+#line 293 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("value", (yyvsp[0].a), NULL, NULL, NULL, "", 0);
 					}
-#line 1663 "parser.tab.c" /* yacc.c:1646  */
+#line 1668 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 295 "parser.y" /* yacc.c:1646  */
+#line 300 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[0].string), 0);
 						(yyval.a) = newast("identifier_id", id, NULL, NULL, NULL, "", 0);
 					}
-#line 1672 "parser.tab.c" /* yacc.c:1646  */
+#line 1677 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 300 "parser.y" /* yacc.c:1646  */
+#line 305 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id1 = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-3].string), 0);
 						struct ast* id2 = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-1].string), 0);
 						(yyval.a) = newast("identifier_id_id", id1, id2, NULL, NULL, "", 0);
 					}
-#line 1682 "parser.tab.c" /* yacc.c:1646  */
+#line 1687 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 306 "parser.y" /* yacc.c:1646  */
+#line 311 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-3].string), 0);
 						struct ast* num = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[-1].number));
 						(yyval.a) = newast("identifier_id_num", id, num, NULL, NULL, "", 0);
 					}
-#line 1692 "parser.tab.c" /* yacc.c:1646  */
+#line 1697 "parser.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1696 "parser.tab.c" /* yacc.c:1646  */
+#line 1701 "parser.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1920,7 +1925,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 314 "parser.y" /* yacc.c:1906  */
+#line 319 "parser.y" /* yacc.c:1906  */
 
 
 
@@ -1943,6 +1948,25 @@ struct variable* get_next_label_id() {
 	label_id++;
 
 	return label;
+}
+
+// LOOP ITERATOR
+struct block* get_next_iter(struct ast* ID_node, struct ast* value_node) {
+	struct block* iter_block = newblock();
+	struct variable* iterator = newvariable("ITER", ID_node->value, "", 0);
+	// do mapy
+	var[ID_node->value] = iterator_id;
+
+	iterator_id++;
+
+	struct indirect_code* code = handle_value(value_node, "B");
+	iter_block->codes.push_back(code);
+
+	struct variable* reg_B = newvariable("REG", "B", "", 0);
+	code = newindirect_code("@STORE", reg_B, iterator);
+	iter_block->codes.push_back(code);
+
+	return iter_block;
 }
 
 // AST
@@ -2175,7 +2199,8 @@ struct block* handle_command(struct ast* command_node) {
 		return code_block;
 	} else if(command_node->value.compare("for_to") == 0) {
 		// FOR ID FROM ... TO ... DO ... ENDFOR
-
+		code_block = handle_for_to(command_node);
+		return code_block;
 	} else if(command_node->value.compare("for_downto") == 0) {
 		// FOR ID FROM ... DOWNTO ... DO ... ENDFOR
 
@@ -2436,7 +2461,6 @@ struct block* handle_do_while(struct ast* do_while_node) {
 	struct block* condition_block = newblock();
 	handle_condition(do_while_node->s_2, end_label, &(condition_block->codes));
 	
-	cout << "TUTAJ DZIALA!" << endl;
 	struct block* commands_block = handle_commands(do_while_node->s_1);
 	
 	struct indirect_code* lab_loop = newindirect_code("@LABEL", loop_label, NULL);
@@ -2458,6 +2482,61 @@ struct block* handle_do_while(struct ast* do_while_node) {
 	condition_block->codes.push_back(lab_end);
 
 	return commands_block;
+}
+
+struct block* handle_for_to(struct ast* for_to_node) {
+	struct variable* end_label = get_next_label_id();
+	struct variable* loop_label = get_next_label_id();
+
+	struct block* iter_block = get_next_iter(for_to_node->s_1, for_to_node->s_2);
+	
+	struct indirect_code* lab_loop = newindirect_code("@LABEL", loop_label, NULL);
+	iter_block->codes.push_back(lab_loop);
+
+	// CONDITION
+	struct block* condition_block = newblock();
+	struct variable* reg_B = newvariable("REG", "B", "", 0);
+	struct variable* reg_C = newvariable("REG", "C", "", 0);
+	struct variable* iterator = newvariable("ITER", for_to_node->s_1->value, "", 0);
+	
+	struct indirect_code* load_iter = newindirect_code("@LOAD", iterator, reg_B);
+	struct indirect_code* b = handle_value(for_to_node->s_3, "C");
+
+	condition_block->codes.push_back(load_iter);
+	condition_block->codes.push_back(b);
+
+	// b - a
+	struct indirect_code* sub = newindirect_code("SUB", reg_C, reg_B);
+	condition_block->codes.push_back(sub);
+	// JUMP -> @END
+	struct indirect_code* jzero = newindirect_code("@JZERO", reg_C, end_label);
+	condition_block->codes.push_back(jzero);
+
+	iter_block->next = condition_block;
+	condition_block->prev = iter_block;
+
+	// COMMANDS
+	struct block* commands_block = handle_commands(for_to_node->s_4);
+
+	condition_block->next = commands_block;
+	commands_block->prev = condition_block;
+	
+	struct block* tmp = commands_block;
+	while(tmp->next != NULL) {
+		tmp = tmp->next;
+	}
+
+	tmp->codes.push_back(load_iter);
+	struct indirect_code* dec = newindirect_code("INC", reg_B, NULL);
+	tmp->codes.push_back(dec);
+	struct indirect_code* store_iter = newindirect_code("@STORE", reg_B, iterator);
+	tmp->codes.push_back(store_iter);
+	struct indirect_code* jump = newindirect_code("@JUMP", loop_label, NULL);
+	tmp->codes.push_back(jump);
+	struct indirect_code* lab_end = newindirect_code("@LABEL", end_label, NULL);
+	tmp->codes.push_back(lab_end);
+
+	return iter_block;
 }
 
 // ################### DONE #####################

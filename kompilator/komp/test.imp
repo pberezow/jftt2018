@@ -1,7 +1,7 @@
 DECLARE
     a; b;
 IN
-    DO
-        a := b;
-    WHILE a < b ENDDO
+    FOR i FROM a TO 5 DO
+        x := a(3)/4;
+    ENDFOR
 END
