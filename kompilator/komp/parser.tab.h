@@ -84,7 +84,7 @@ union YYSTYPE
 
 	struct ast* a;
 	char* string;
-	int number;
+	unsigned long long number;
 
 #line 90 "parser.tab.h" /* yacc.c:1909  */
 };
