@@ -2170,7 +2170,7 @@ void handle_program(struct ast* root_node) {
 	}
 	struct block* b = handle_commands(root_node->s_2);
 
-	print_blocks(b);
+	// print_blocks(b);
 	gen_assembler(b);
 	
 }
