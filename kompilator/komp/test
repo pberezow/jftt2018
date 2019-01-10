@@ -1,248 +1,97 @@
-SUB B B    #0
-INC B    #1
-ADD B B    #2
-INC B    #3
-ADD B B    #4
-ADD B B    #5
-ADD B B    #6
-INC B    #7
-ADD B B    #8
-ADD B B    #9
-SUB A A    #10
-STORE B    #11
-SUB A A    #12
-LOAD B    #13
-SUB A A    #14
-INC A    #15
-ADD A A    #16
-INC A    #17
-ADD A A    #18
-ADD A A    #19
-ADD A A    #20
-INC A    #21
-ADD A A    #22
-INC A    #23
-ADD A A    #24
-STORE B    #25
-SUB A A    #26
-INC A    #27
-ADD A A    #28
-INC A    #29
-ADD A A    #30
-ADD A A    #31
-ADD A A    #32
-INC A    #33
-ADD A A    #34
+GET B    #0
+SUB A A    #1
+STORE B    #2
+SUB B B    #3
+SUB A A    #4
+LOAD C    #5
+SUB C B    #6
+JZERO C 96    #7
+SUB B B    #8
+SUB A A    #9
+LOAD C    #10
+SUB D D    #11
+INC D    #12
+ADD D D    #13
+COPY E D    #14
+COPY F D    #15
+SUB F C    #16
+JZERO F 19    #17
+JUMP 21    #18
+ADD D D    #19
+JUMP 15    #20
+COPY F E    #21
+SUB F C    #22
+JZERO F 25    #23
+JUMP 34    #24
+ADD B B    #25
+COPY F D    #26
+SUB F C    #27
+JZERO F 30    #28
+JUMP 32    #29
+SUB C D    #30
+INC B    #31
+HALF D    #32
+JUMP 21    #33
+SUB A A    #34
 INC A    #35
-ADD A A    #36
-LOAD B    #37
-SUB C C    #38
-INC C    #39
-ADD C C    #40
-SUB B C    #41
-JZERO B 88    #42
+STORE B    #36
+SUB D D    #37
+INC D    #38
+ADD D D    #39
+SUB A A    #40
+INC A    #41
+LOAD C    #42
 SUB B B    #43
-INC B    #44
-SUB A A    #45
-INC A    #46
-ADD A A    #47
-INC A    #48
-ADD A A    #49
-ADD A A    #50
-ADD A A    #51
-INC A    #52
-ADD A A    #53
-INC A    #54
-ADD A A    #55
-LOAD A    #56
-SUB B B    #57
-INC B    #58
-ADD B B    #59
-SUB A B    #60
-STORE B    #61
-SUB A A    #62
-INC A    #63
-ADD A A    #64
-INC A    #65
-ADD A A    #66
-ADD A A    #67
-ADD A A    #68
-INC A    #69
-ADD A A    #70
-INC A    #71
-ADD A A    #72
-LOAD B    #73
-DEC B    #74
-SUB A A    #75
-INC A    #76
-ADD A A    #77
-INC A    #78
-ADD A A    #79
-ADD A A    #80
-ADD A A    #81
-INC A    #82
-ADD A A    #83
-INC A    #84
-ADD A A    #85
-STORE B    #86
-JUMP 26    #87
-SUB B B    #88
-INC B    #89
-ADD B B    #90
-SUB A A    #91
-INC A    #92
-ADD A A    #93
-INC A    #94
-ADD A A    #95
-ADD A A    #96
-ADD A A    #97
-INC A    #98
-ADD A A    #99
-INC A    #100
-ADD A A    #101
-STORE B    #102
-SUB A A    #103
-INC A    #104
-ADD A A    #105
-INC A    #106
-ADD A A    #107
-ADD A A    #108
-ADD A A    #109
-INC A    #110
-ADD A A    #111
-INC A    #112
-ADD A A    #113
-LOAD B    #114
-SUB A A    #115
-LOAD C    #116
-SUB C B    #117
-JZERO C 247    #118
-SUB A A    #119
-INC A    #120
-ADD A A    #121
-INC A    #122
-ADD A A    #123
-ADD A A    #124
-ADD A A    #125
-INC A    #126
-ADD A A    #127
-INC A    #128
-ADD A A    #129
-LOAD A    #130
-SUB B B    #131
-INC B    #132
-ADD B B    #133
-SUB A B    #134
-LOAD B    #135
-SUB C C    #136
-COPY D B    #137
-SUB B C    #138
-JZERO B 141    #139
-JZERO C 143    #140
-SUB C D    #141
-JZERO C 143    #142
-SUB A A    #143
-INC A    #144
-ADD A A    #145
-INC A    #146
-ADD A A    #147
-ADD A A    #148
-ADD A A    #149
-INC A    #150
-ADD A A    #151
-INC A    #152
-ADD A A    #153
-LOAD B    #154
-SUB A A    #155
-INC A    #156
-ADD A A    #157
-INC A    #158
-ADD A A    #159
-ADD A A    #160
-ADD A A    #161
-INC A    #162
-ADD A A    #163
-INC A    #164
-ADD A A    #165
-LOAD C    #166
-ADD B C    #167
-SUB A A    #168
-INC A    #169
-STORE B    #170
-SUB A A    #171
-INC A    #172
-LOAD B    #173
-SUB A A    #174
-LOAD C    #175
-SUB B C    #176
-JZERO B 179    #177
-JUMP 208    #178
-SUB B B    #179
-SUB A A    #180
-INC A    #181
-LOAD A    #182
-SUB B B    #183
-INC B    #184
-ADD B B    #185
-SUB A B    #186
-STORE B    #187
-SUB A A    #188
-INC A    #189
-LOAD B    #190
-SUB A A    #191
-INC A    #192
-ADD A A    #193
-INC A    #194
-ADD A A    #195
-ADD A A    #196
-ADD A A    #197
-INC A    #198
-ADD A A    #199
-INC A    #200
-ADD A A    #201
-LOAD C    #202
-ADD B C    #203
-SUB A A    #204
-INC A    #205
-STORE B    #206
-JUMP 171    #207
-SUB A A    #208
-INC A    #209
-ADD A A    #210
-INC A    #211
-ADD A A    #212
-ADD A A    #213
-ADD A A    #214
-INC A    #215
-ADD A A    #216
-INC A    #217
-ADD A A    #218
-LOAD B    #219
-PUT B    #220
-SUB A A    #221
-INC A    #222
-ADD A A    #223
-INC A    #224
-ADD A A    #225
-ADD A A    #226
-ADD A A    #227
-INC A    #228
-ADD A A    #229
-INC A    #230
-ADD A A    #231
-LOAD B    #232
-INC B    #233
-SUB A A    #234
-INC A    #235
-ADD A A    #236
-INC A    #237
-ADD A A    #238
-ADD A A    #239
-ADD A A    #240
-INC A    #241
-ADD A A    #242
-INC A    #243
-ADD A A    #244
-STORE B    #245
-JUMP 103    #246
+JODD C 46    #44
+JUMP 47    #45
+ADD B D    #46
+ADD D D    #47
+HALF C    #48
+JODD C 46    #49
+JZERO C 52    #50
+JUMP 47    #51
+SUB A A    #52
+INC A    #53
+STORE B    #54
+SUB A A    #55
+INC A    #56
+LOAD B    #57
+SUB A A    #58
+LOAD C    #59
+SUB C B    #60
+JZERO C 65    #61
+SUB B B    #62
+INC B    #63
+PUT B    #64
+SUB B B    #65
+PUT B    #66
+SUB B B    #67
+SUB A A    #68
+LOAD C    #69
+SUB D D    #70
+INC D    #71
+ADD D D    #72
+COPY E D    #73
+COPY F D    #74
+SUB F C    #75
+JZERO F 78    #76
+JUMP 80    #77
+ADD D D    #78
+JUMP 74    #79
+COPY F E    #80
+SUB F C    #81
+JZERO F 84    #82
+JUMP 93    #83
+ADD B B    #84
+COPY F D    #85
+SUB F C    #86
+JZERO F 89    #87
+JUMP 91    #88
+SUB C D    #89
+INC B    #90
+HALF D    #91
+JUMP 80    #92
+SUB A A    #93
+STORE B    #94
+JUMP 3    #95
 HALT

@@ -1452,11 +1452,153 @@ void handle_expression(struct ast* exp_node, string result_reg, vector<struct in
 			// struct indirect_code* mul = newindirect_code("@MUL", reg1, reg2);
 			// (*vec).push_back(mul);
 		} else if(exp_node->value.compare("/") == 0) { // / dzielenie
-			struct indirect_code* div = newindirect_code("@DIV", reg1, reg2);
-			(*vec).push_back(div);
+			// struct indirect_code* div = newindirect_code("@DIV", reg1, reg2);
+			struct variable* reg3 = newvariable("REG", "D", "", 0);
+			struct variable* reg4 = newvariable("REG", "E", "", 0);
+			struct variable* reg5 = newvariable("REG", "F", "", 0);
+
+			struct variable* lab1 = get_next_label_id();
+			struct variable* lab2 = get_next_label_id();
+			struct variable* lab3 = get_next_label_id();
+			struct variable* lab4 = get_next_label_id();
+			struct variable* lab5 = get_next_label_id();
+			struct variable* lab6 = get_next_label_id();
+			struct variable* lab7 = get_next_label_id();
+
+			(*vec)[(*vec).size()-2] = newindirect_code("SUB", reg1, reg1);
+			(*vec)[(*vec).size()-1] = handle_value(exp_node->s_1, reg2->id1);
+			(*vec).push_back(handle_value(exp_node->s_2, reg3->id1));
+
+			struct indirect_code* copy_4_3 = newindirect_code("@COPY", reg4, reg3);
+			(*vec).push_back(copy_4_3);
+			struct indirect_code* lab1_code = newindirect_code("@LABEL", lab1, NULL);
+			(*vec).push_back(lab1_code);
+			struct indirect_code* copy_5_3 = newindirect_code("@COPY", reg5, reg3);
+			(*vec).push_back(copy_5_3);
+			struct indirect_code* sub_5_2 = newindirect_code("SUB", reg5, reg2);
+			(*vec).push_back(sub_5_2);
+			struct indirect_code* jzero_r5_2 = newindirect_code("@JZERO", reg5, lab2);
+			(*vec).push_back(jzero_r5_2);
+			struct indirect_code* jump_3 = newindirect_code("@JUMP", lab3, NULL);
+			(*vec).push_back(jump_3);
+			struct indirect_code* lab2_code = newindirect_code("@LABEL", lab2, NULL);
+			(*vec).push_back(lab2_code);
+			struct indirect_code* add_3_3 = newindirect_code("ADD", reg3, reg3);
+			(*vec).push_back(add_3_3);
+			struct indirect_code* jump_1 = newindirect_code("@JUMP", lab1, NULL);
+			(*vec).push_back(jump_1);
+			struct indirect_code* lab3_code = newindirect_code("@LABEL", lab3, NULL);
+			(*vec).push_back(lab3_code);
+			struct indirect_code* copy_5_4 = newindirect_code("@COPY", reg5, reg4);
+			(*vec).push_back(copy_5_4);
+			// struct indirect_code* sub = newindirect_code("@JZERO", reg3, lab5);
+			(*vec).push_back(sub_5_2);
+			struct indirect_code* jzero_r5_4 = newindirect_code("@JZERO", reg5, lab4);
+			(*vec).push_back(jzero_r5_4);
+			struct indirect_code* jump_5 = newindirect_code("@JUMP", lab5, NULL);
+			(*vec).push_back(jump_5);
+			struct indirect_code* lab4_code = newindirect_code("@LABEL", lab4, NULL);
+			(*vec).push_back(lab4_code);
+			struct indirect_code* add_1_1 = newindirect_code("ADD", reg1, reg1);
+			(*vec).push_back(add_1_1);
+			// struct indirect_code* copy_5_3 = newindirect_code("@JUMP", lab7, NULL);
+			(*vec).push_back(copy_5_3);
+			// struct indirect_code* sub_5_2 = newindirect_code("@LABEL", lab6, NULL);
+			(*vec).push_back(sub_5_2);
+			struct indirect_code* jzero_r5_6 = newindirect_code("@JZERO", reg5, lab6);
+			(*vec).push_back(jzero_r5_6);
+			struct indirect_code* jump_7 = newindirect_code("@JUMP", lab7, NULL);
+			(*vec).push_back(jump_7);
+			struct indirect_code* lab6_code = newindirect_code("@LABEL", lab6, NULL);
+			(*vec).push_back(lab6_code);
+			struct indirect_code* sub_2_3 = newindirect_code("SUB", reg2, reg3);
+			(*vec).push_back(sub_2_3);
+			struct indirect_code* inc_1 = newindirect_code("INC", reg1, NULL);
+			(*vec).push_back(inc_1);
+			struct indirect_code* lab7_code = newindirect_code("@LABEL", lab7, NULL);
+			(*vec).push_back(lab7_code);
+			struct indirect_code* half_3 = newindirect_code("@HALF", reg3, NULL);
+			(*vec).push_back(half_3);
+			(*vec).push_back(jump_3);
+			struct indirect_code* lab5_code = newindirect_code("@LABEL", lab5, NULL);
+			(*vec).push_back(lab5_code);
+			
+			
+
+			// (*vec).push_back(div);
 		} else { // % modulo
 			struct indirect_code* mod = newindirect_code("@MOD", reg1, reg2);
-			(*vec).push_back(mod);
+			// (*vec).push_back(mod);
+			struct variable* reg3 = newvariable("REG", "D", "", 0);
+			struct variable* reg4 = newvariable("REG", "E", "", 0);
+			struct variable* reg5 = newvariable("REG", "F", "", 0);
+			reg2 = reg1;
+
+			struct variable* lab1 = get_next_label_id();
+			struct variable* lab2 = get_next_label_id();
+			struct variable* lab3 = get_next_label_id();
+			struct variable* lab4 = get_next_label_id();
+			struct variable* lab5 = get_next_label_id();
+			struct variable* lab6 = get_next_label_id();
+			struct variable* lab7 = get_next_label_id();
+
+			// (*vec)[(*vec).size()-2] = newindirect_code("SUB", reg1, reg1);
+			(*vec)[(*vec).size()-2] = handle_value(exp_node->s_1, reg2->id1);
+			(*vec)[(*vec).size()-1] = handle_value(exp_node->s_2, reg3->id1);
+
+			struct indirect_code* copy_4_3 = newindirect_code("@COPY", reg4, reg3);
+			(*vec).push_back(copy_4_3);
+			struct indirect_code* lab1_code = newindirect_code("@LABEL", lab1, NULL);
+			(*vec).push_back(lab1_code);
+			struct indirect_code* copy_5_3 = newindirect_code("@COPY", reg5, reg3);
+			(*vec).push_back(copy_5_3);
+			struct indirect_code* sub_5_2 = newindirect_code("SUB", reg5, reg2);
+			(*vec).push_back(sub_5_2);
+			struct indirect_code* jzero_r5_2 = newindirect_code("@JZERO", reg5, lab2);
+			(*vec).push_back(jzero_r5_2);
+			struct indirect_code* jump_3 = newindirect_code("@JUMP", lab3, NULL);
+			(*vec).push_back(jump_3);
+			struct indirect_code* lab2_code = newindirect_code("@LABEL", lab2, NULL);
+			(*vec).push_back(lab2_code);
+			struct indirect_code* add_3_3 = newindirect_code("ADD", reg3, reg3);
+			(*vec).push_back(add_3_3);
+			struct indirect_code* jump_1 = newindirect_code("@JUMP", lab1, NULL);
+			(*vec).push_back(jump_1);
+			struct indirect_code* lab3_code = newindirect_code("@LABEL", lab3, NULL);
+			(*vec).push_back(lab3_code);
+			struct indirect_code* copy_5_4 = newindirect_code("@COPY", reg5, reg4);
+			(*vec).push_back(copy_5_4);
+			// struct indirect_code* sub = newindirect_code("@JZERO", reg3, lab5);
+			(*vec).push_back(sub_5_2);
+			struct indirect_code* jzero_r5_4 = newindirect_code("@JZERO", reg5, lab4);
+			(*vec).push_back(jzero_r5_4);
+			struct indirect_code* jump_5 = newindirect_code("@JUMP", lab5, NULL);
+			(*vec).push_back(jump_5);
+			struct indirect_code* lab4_code = newindirect_code("@LABEL", lab4, NULL);
+			(*vec).push_back(lab4_code);
+			// struct indirect_code* add_1_1 = newindirect_code("ADD", reg1, reg1);
+			// (*vec).push_back(add_1_1);
+			// struct indirect_code* copy_5_3 = newindirect_code("@JUMP", lab7, NULL);
+			(*vec).push_back(copy_5_3);
+			// struct indirect_code* sub_5_2 = newindirect_code("@LABEL", lab6, NULL);
+			(*vec).push_back(sub_5_2);
+			struct indirect_code* jzero_r5_6 = newindirect_code("@JZERO", reg5, lab6);
+			(*vec).push_back(jzero_r5_6);
+			struct indirect_code* jump_7 = newindirect_code("@JUMP", lab7, NULL);
+			(*vec).push_back(jump_7);
+			struct indirect_code* lab6_code = newindirect_code("@LABEL", lab6, NULL);
+			(*vec).push_back(lab6_code);
+			struct indirect_code* sub_2_3 = newindirect_code("SUB", reg2, reg3);
+			(*vec).push_back(sub_2_3);
+			// struct indirect_code* inc_1 = newindirect_code("INC", reg1, NULL);
+			// (*vec).push_back(inc_1);
+			struct indirect_code* lab7_code = newindirect_code("@LABEL", lab7, NULL);
+			(*vec).push_back(lab7_code);
+			struct indirect_code* half_3 = newindirect_code("@HALF", reg3, NULL);
+			(*vec).push_back(half_3);
+			(*vec).push_back(jump_3);
+			struct indirect_code* lab5_code = newindirect_code("@LABEL", lab5, NULL);
+			(*vec).push_back(lab5_code);
 		}
 	}
 }

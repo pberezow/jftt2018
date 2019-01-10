@@ -1,6 +1,10 @@
 DECLARE
-    a; b;
+    a; b; c;
 IN
-    a := 4 * 4;
+    a := 19;
     WRITE a;
+    b := 4;
+    WRITE b;
+    c := a % b;
+    WRITE c;
 END
