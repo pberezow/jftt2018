@@ -5,6 +5,7 @@
 	#include <string>
 	#include <vector>
 	#include <map>
+	#include <fstream>
 	// #include <string.h>
 	#include <typeinfo>
 	using namespace std;
@@ -13,6 +14,9 @@
 
 	// long errno;
 	extern int lineno;
+
+	// output
+	ofstream outfile;
 
 // GLOBALS
 int label_id = 0;
@@ -144,6 +148,9 @@ void print_indirect_code(struct indirect_code* code);
 	void gen_copy(struct indirect_code* code);
 	void gen_put(struct indirect_code* code);
 	void gen_get(struct indirect_code* code);
+
+	void gen_half(struct indirect_code* code);
+	void gen_jodd(struct indirect_code* code);
 
 
 %}
@@ -349,10 +356,26 @@ identifier:
 
 
 int main(int argc, char **argv) {
+	extern FILE * yyin; 
+	FILE *infile = fopen(argv[1], "r");
+
+	if (!infile) {
+		printf( "File not found.");
+		return -1;
+	}
+
+	// ofstream outfile;
+  	outfile.open(argv[2]);
+
+	yyin = infile;
+	yyparse();
+
 	// initializeCompilation();
-    yyparse();
+    // yyparse();
     // finishCompilation();
     // printf("Kompilacja zakonczona.\n");
+	outfile.close();
+	return 0;
 }
 
 void yyerror(char const *s){
@@ -562,7 +585,7 @@ void handle_program(struct ast* root_node) {
 	}
 	struct block* b = handle_commands(root_node->s_2);
 
-	// print_blocks(b);
+	print_blocks(b);
 	gen_assembler(b);
 	
 }
@@ -663,6 +686,10 @@ void gen_assembler(struct block* root) {
 				gen_get(code);
 			} else if(code->kw.compare("@PUT") == 0) {
 				gen_put(code);
+			} else if(code->kw.compare("@HALF") == 0) {
+				gen_half(code);
+			} else if(code->kw.compare("@JODD") == 0) {
+				gen_jodd(code);
 			}
 
 		}
@@ -671,12 +698,12 @@ void gen_assembler(struct block* root) {
 
 	for(int i=0; i<instructs.size(); i++) {
 		if(instructs[i].length() < 5) {
-			cout << jumps[instructs[i]] << labels[instructs[i]] << "    #" << i << endl;
+			outfile << jumps[instructs[i]] << labels[instructs[i]] << "    #" << i << endl;
 		} else {
-			cout << instructs[i] << "    #" << i << endl;
+			outfile << instructs[i] << "    #" << i << endl;
 		}
 	}
-	cout << "HALT" << endl;
+	outfile << "HALT" << endl;
 }
 
 void gen_get(struct indirect_code* code) {
@@ -690,7 +717,7 @@ void gen_put(struct indirect_code* code) {
 }
 
 void gen_copy(struct indirect_code* code) {
-	instructs.push_back("COPY " + code->val1->id1 + " " + code->val2->id2);
+	instructs.push_back("COPY " + code->val1->id1 + " " + code->val2->id1);
 	linoleo++;
 }
 
@@ -710,6 +737,23 @@ void gen_jzero(struct indirect_code* code) {
 		instructs.push_back(to_string(code->val2->number));
 		linoleo++;
 	// } else {
+		
+	// }
+}
+
+void gen_jodd(struct indirect_code* code) {
+	// if(labels.find(code->val2->number) != labels.end()) {
+		jumps[to_string(code->val2->number)] = "JODD " + code->val1->id1 + " ";
+		instructs.push_back(to_string(code->val2->number));
+		linoleo++;
+	// } else {
+		
+	// }
+}
+
+void gen_half(struct indirect_code* code) {
+	instructs.push_back("HALF " + code->val1->id1);
+	linoleo++;
 		
 	// }
 }
@@ -1365,8 +1409,48 @@ void handle_expression(struct ast* exp_node, string result_reg, vector<struct in
 			struct indirect_code* sub = newindirect_code("SUB", reg1, reg2);
 			(*vec).push_back(sub);
 		} else if(exp_node->value.compare("*") == 0) { // * mnozenie
-			struct indirect_code* mul = newindirect_code("@MUL", reg1, reg2);
-			(*vec).push_back(mul);
+			// DO OPTYMALIZACJI
+			
+			struct variable* reg3 = newvariable("REG", "D", "", 0);
+			struct variable* reg4 = newvariable("REG", "E", "", 0);
+			struct variable* lab1 = get_next_label_id();
+			struct variable* lab2 = get_next_label_id();
+			struct variable* lab_end = get_next_label_id();
+
+
+
+			(*vec)[(*vec).size()-2] = handle_value(exp_node->s_1, reg3->id1);
+
+			(*vec).push_back(newindirect_code("SUB", reg1, reg1));
+
+			// struct indirect_code* cp1 = newindirect_code("@COPY", reg3, reg1);
+			// (*vec).push_back(cp1);
+
+			struct indirect_code* jodd = newindirect_code("@JODD", reg2, lab1);
+			(*vec).push_back(jodd);
+			struct indirect_code* jump1 = newindirect_code("@JUMP", lab2, NULL);
+			(*vec).push_back(jump1);
+			struct indirect_code* lab1_code = newindirect_code("@LABEL", lab1, NULL);
+			(*vec).push_back(lab1_code);
+			struct indirect_code* add1 = newindirect_code("ADD", reg1, reg3);
+			(*vec).push_back(add1);
+			struct indirect_code* lab2_code = newindirect_code("@LABEL", lab2, NULL);
+			(*vec).push_back(lab2_code);
+			struct indirect_code* add2 = newindirect_code("ADD", reg3, reg3);
+			(*vec).push_back(add2);
+			struct indirect_code* half = newindirect_code("@HALF", reg2, NULL);
+			(*vec).push_back(half);
+			(*vec).push_back(jodd);
+			struct indirect_code* jzero = newindirect_code("@JZERO", reg2, lab_end);
+			(*vec).push_back(jzero);
+			struct indirect_code* jump2 = newindirect_code("@JUMP", lab2, NULL);
+			(*vec).push_back(jump2);
+			struct indirect_code* lab_end_code = newindirect_code("@LABEL", lab_end, NULL);
+			(*vec).push_back(lab_end_code);
+			
+			
+			// struct indirect_code* mul = newindirect_code("@MUL", reg1, reg2);
+			// (*vec).push_back(mul);
 		} else if(exp_node->value.compare("/") == 0) { // / dzielenie
 			struct indirect_code* div = newindirect_code("@DIV", reg1, reg2);
 			(*vec).push_back(div);
