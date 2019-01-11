@@ -11,10 +11,9 @@ IN
             j := i + i;
             WHILE j <= n DO
                 sito(j) := 0;
-                WRITE sito(j);
                 j := j + i;
             ENDWHILE
-            [WRITE i;]
+            WRITE i;
         ENDIF
     ENDFOR
 END

@@ -27,6 +27,15 @@ int linoleo = 0;
 map<string, string> jumps;
 vector<string> instructs;
 
+map<string, int> registers;
+map<string, int> reg_was_stolen;
+
+void prepare_registers();
+string use_register();
+void free_register(string reg);
+int check_if_stolen(string reg);
+
+
 map<string, int> vars;
 map<string, struct arr*> arrays;
 map<string, int> labels;
@@ -384,6 +393,54 @@ void yyerror(char const *s){
 	exit(1);
 }
 
+// REJESTRY
+
+void prepare_registers() {
+	registers["B"] = 0;
+	registers["C"] = 0;
+	registers["D"] = 0;
+	registers["E"] = 0;
+	registers["F"] = 0;
+	registers["G"] = 0;
+	registers["H"] = 0;
+
+	reg_was_stolen["B"] = 0;
+	reg_was_stolen["C"] = 0;
+	reg_was_stolen["D"] = 0;
+	reg_was_stolen["E"] = 0;
+	reg_was_stolen["F"] = 0;
+	reg_was_stolen["G"] = 0;
+	reg_was_stolen["H"] = 0;
+}
+
+string use_register() {
+	for(map<string, int>::iterator it=registers.begin(); it!=registers.end(); ++it) {
+		if(it->second == 0) {
+			registers[it->first] = 1;
+			return it->first;
+		}
+	}
+    for(map<string, int>::iterator it=reg_was_stolen.begin(); it!=reg_was_stolen.end(); ++it) {
+		if(it->second == 0) {
+			reg_was_stolen[it->first] = 1;
+			return it->first;
+		}
+	}
+}
+
+void free_register(string reg) {
+	registers[reg] = 0;
+}
+
+int check_if_stolen(string reg) {
+	if(reg_was_stolen[reg] == 1) {
+		reg_was_stolen[reg] = 0;
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
 // LABEL ITERATOR
 struct variable* get_next_label_id() {
 	struct variable* label = newvariable("", "", "", label_id);
@@ -399,7 +456,7 @@ struct block* get_next_iter(struct ast* ID_node, struct ast* value_node) {
 	// do mapy
 	vars[ID_node->value] = iterator_id;
 
-	// cout << "ITERATOR " << ID_node->value << "  id: " << iterator_id << endl;
+	cout << "ITERATOR " << ID_node->value << "  id: " << iterator_id << endl;
 
 	iterator_id++;
 
@@ -585,7 +642,7 @@ void handle_program(struct ast* root_node) {
 	}
 	struct block* b = handle_commands(root_node->s_2);
 
-	print_blocks(b);
+	// print_blocks(b);
 	gen_assembler(b);
 	
 }
@@ -638,11 +695,13 @@ void declare_variables(struct ast* declarations) {
 			mem_id--;
 			// cout << "DECLARE VAR : " << ptr->s_2->value << "  idx:" << mem_id << endl;
 			vars[ptr->s_2->value] = mem_id;
+			cout << "VAR " << ptr->s_2->value << ": " << mem_id << endl;
 
 		} else { // array
 					mem_id -= (ptr->s_4->number - ptr->s_3->number + 1);
-					struct arr* arr_obj = newarray(ptr->s_2->value, ptr->s_3->number, ptr->s_4->number, iterator_id);
+					struct arr* arr_obj = newarray(ptr->s_2->value, ptr->s_3->number, ptr->s_4->number, mem_id);
 					arrays[ptr->s_2->value] = arr_obj;
+					cout << "ARR " << ptr->s_2->value << ": " << mem_id << endl;
 
 		}
 
@@ -792,16 +851,20 @@ void gen_store(struct indirect_code* code) {
 	} else if(code->val2->label.compare("ARR") == 0){
 		struct arr* a = arrays[code->val2->id1];
 		if(code->val2->id2.compare("") == 0) {
-			idx = code->val2->number - a->from;
+			idx = code->val2->number - a->from + a->mem_idx;
 			gen_const("A", idx);
 		} else {
 			int a_idx = vars[code->val2->id2];
 			gen_const("A", a_idx);
 			instructs.push_back("LOAD A");
 			linoleo++;
-			gen_const("B", a->from);
-			instructs.push_back("SUB A B");
+			gen_const("H", a->mem_idx);
+			instructs.push_back("ADD A H");
 			linoleo++;
+			gen_const("H", a->from);
+			instructs.push_back("SUB A H");
+			linoleo++;
+			// cout << " A_idx: " << a_idx << " MEM_idx: " << a->mem_idx << " FROM: " << a->from << endl;
 		}
 		// idx = a_idx - a->from;
 
@@ -822,17 +885,22 @@ void gen_load(struct indirect_code* code) {
 		gen_const("A", idx);
 
 	} else if(code->val1->label.compare("ARR") == 0){
+		// cout << "ARRAY" << endl;
 		struct arr* a = arrays[code->val1->id1];
 		if(code->val1->id2.compare("") == 0) {
-			idx = code->val1->number - a->from;
+			idx = code->val1->number - a->from + a->mem_idx;
+			// cout << "IDX: " << idx << endl;
 			gen_const("A", idx);
 		} else {
 			int a_idx = vars[code->val1->id2];
 			gen_const("A", a_idx);
 			instructs.push_back("LOAD A");
 			linoleo++;
-			gen_const("B", a->from);
-			instructs.push_back("SUB A B");
+			gen_const("H", a->mem_idx);
+			instructs.push_back("ADD A H");
+			linoleo++;
+			gen_const("H", a->from);
+			instructs.push_back("SUB A H");
 			linoleo++;
 		}
 		// idx = a_idx - a->from;
@@ -1029,6 +1097,7 @@ void handle_condition(struct ast* condition_node, struct variable* end_label, ve
 // \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
 // ########## <, <=, =, != ###################
 void _handle_lt(struct ast* condition_node, struct variable* end_label, vector<struct indirect_code*>* vec) {
+	// string reg_gen = use_register();
 	struct variable* reg_B = newvariable("REG", "B", "", 0);
 	struct variable* reg_C = newvariable("REG", "C", "", 0);
 	
@@ -1265,6 +1334,7 @@ struct block* handle_do_while(struct ast* do_while_node) {
 
 struct block* handle_for_to(struct ast* for_to_node) {
 	struct variable* end_label = get_next_label_id();
+	struct variable* label_0 = get_next_label_id();
 	struct variable* loop_label = get_next_label_id();
 
 	struct block* iter_block = get_next_iter(for_to_node->s_1, for_to_node->s_2);
@@ -1284,12 +1354,18 @@ struct block* handle_for_to(struct ast* for_to_node) {
 	condition_block->codes.push_back(load_iter);
 	condition_block->codes.push_back(b);
 
-	// b - @iter
-	struct indirect_code* sub = newindirect_code("SUB", reg_C, reg_B);
+	// @iter - b (<=)
+	struct indirect_code* sub = newindirect_code("SUB", reg_B, reg_C);
 	condition_block->codes.push_back(sub);
 	// JUMP -> @END
-	struct indirect_code* jzero = newindirect_code("@JZERO", reg_C, end_label);
+	struct indirect_code* jzero = newindirect_code("@JZERO", reg_B, label_0);
 	condition_block->codes.push_back(jzero);
+
+	struct indirect_code* jump_end = newindirect_code("@JUMP", end_label, NULL);
+	condition_block->codes.push_back(jump_end);
+
+	struct indirect_code* label_0_code = newindirect_code("@LABEL", label_0, NULL);
+	condition_block->codes.push_back(label_0_code);
 
 	iter_block->next = condition_block;
 	condition_block->prev = iter_block;
@@ -1320,6 +1396,7 @@ struct block* handle_for_to(struct ast* for_to_node) {
 
 struct block* handle_for_downto(struct ast* for_to_node) {
 	struct variable* end_label = get_next_label_id();
+	struct variable* label_0 = get_next_label_id();
 	struct variable* loop_label = get_next_label_id();
 
 	struct block* iter_block = get_next_iter(for_to_node->s_1, for_to_node->s_2);
@@ -1340,12 +1417,18 @@ struct block* handle_for_downto(struct ast* for_to_node) {
 	condition_block->codes.push_back(b);
 
 	// TU MOZE BYC BLAD
-	// @iter - b
-	struct indirect_code* sub = newindirect_code("SUB", reg_B, reg_C);
+	// b - @iter (>=)
+	struct indirect_code* sub = newindirect_code("SUB", reg_C, reg_B);
 	condition_block->codes.push_back(sub);
 	// JUMP -> @END
-	struct indirect_code* jzero = newindirect_code("@JZERO", reg_B, end_label);
+	struct indirect_code* jzero = newindirect_code("@JZERO", reg_C, label_0);
 	condition_block->codes.push_back(jzero);
+
+	struct indirect_code* jump_end = newindirect_code("@JUMP", end_label, NULL);
+	condition_block->codes.push_back(jump_end);
+
+	struct indirect_code* label_0_code = newindirect_code("@LABEL", label_0, NULL);
+	condition_block->codes.push_back(label_0_code);
 
 	iter_block->next = condition_block;
 	condition_block->prev = iter_block;

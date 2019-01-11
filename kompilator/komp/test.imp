@@ -1,10 +1,10 @@
 DECLARE
-    a; b; c;
+    n; j; sito(2:3);
 IN
-    a := 19;
-    WRITE a;
-    b := 4;
-    WRITE b;
-    c := a % b;
-    WRITE c;
+    n := 3;
+    FOR i FROM n DOWNTO 2 DO
+        sito(i) := 1;
+        WRITE sito(i);
+    ENDFOR
+    WRITE n;
 END
