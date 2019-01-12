@@ -1,10 +1,8 @@
 DECLARE
     n; j; sito(2:3);
 IN
-    n := 3;
-    FOR i FROM n DOWNTO 2 DO
-        sito(i) := 1;
-        WRITE sito(i);
+    n := 0;
+    FOR i FROM 25 DOWNTO 0 DO
+        WRITE i;
     ENDFOR
-    WRITE n;
 END

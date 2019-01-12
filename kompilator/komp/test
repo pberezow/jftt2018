@@ -1,99 +1,99 @@
 SUB B B    #0
 INC B    #1
 ADD B B    #2
-INC B    #3
-ADD B B    #4
+ADD B B    #3
+INC B    #4
 ADD B B    #5
-ADD B B    #6
-INC B    #7
-ADD B B    #8
-ADD B B    #9
-SUB A A    #10
-STORE B    #11
-SUB A A    #12
-LOAD B    #13
-SUB A A    #14
+INC B    #6
+ADD B B    #7
+INC B    #8
+SUB A A    #9
+INC A    #10
+ADD A A    #11
+INC A    #12
+ADD A A    #13
+ADD A A    #14
 INC A    #15
 ADD A A    #16
 INC A    #17
-ADD A A    #18
-ADD A A    #19
-ADD A A    #20
-INC A    #21
-ADD A A    #22
-INC A    #23
+STORE B    #18
+SUB A A    #19
+INC A    #20
+ADD A A    #21
+INC A    #22
+ADD A A    #23
 ADD A A    #24
-STORE B    #25
-SUB A A    #26
+INC A    #25
+ADD A A    #26
 INC A    #27
-ADD A A    #28
-INC A    #29
-ADD A A    #30
-ADD A A    #31
-ADD A A    #32
+LOAD B    #28
+SUB C C    #29
+INC C    #30
+SUB B C    #31
+SUB A A    #32
 INC A    #33
 ADD A A    #34
 INC A    #35
 ADD A A    #36
-LOAD B    #37
-SUB C C    #38
-INC C    #39
-ADD C C    #40
-SUB C B    #41
-JZERO C 44    #42
-JUMP 93    #43
-SUB B B    #44
+INC A    #37
+ADD A A    #38
+ADD A A    #39
+STORE B    #40
+SUB B B    #41
+INC B    #42
+ADD B B    #43
+ADD B B    #44
 INC B    #45
 SUB A A    #46
 INC A    #47
 ADD A A    #48
-INC A    #49
-ADD A A    #50
+ADD A A    #49
+INC A    #50
 ADD A A    #51
-ADD A A    #52
-INC A    #53
-ADD A A    #54
-INC A    #55
-ADD A A    #56
-LOAD A    #57
-SUB H H    #58
-INC H    #59
-ADD H H    #60
-ADD A H    #61
-SUB H H    #62
-INC H    #63
-ADD H H    #64
-SUB A H    #65
-STORE B    #66
-SUB A A    #67
-INC A    #68
-ADD A A    #69
-INC A    #70
+INC A    #52
+ADD A A    #53
+INC A    #54
+STORE B    #55
+SUB B B    #56
+INC B    #57
+SUB A A    #58
+INC A    #59
+ADD A A    #60
+INC A    #61
+ADD A A    #62
+ADD A A    #63
+ADD A A    #64
+STORE B    #65
+SUB B B    #66
+INC B    #67
+SUB A A    #68
+INC A    #69
+ADD A A    #70
 ADD A A    #71
 ADD A A    #72
 ADD A A    #73
-INC A    #74
-ADD A A    #75
-INC A    #76
-ADD A A    #77
-LOAD B    #78
-DEC B    #79
-SUB A A    #80
-INC A    #81
+ADD A A    #74
+STORE B    #75
+SUB A A    #76
+INC A    #77
+ADD A A    #78
+ADD A A    #79
+ADD A A    #80
+ADD A A    #81
 ADD A A    #82
-INC A    #83
-ADD A A    #84
-ADD A A    #85
+LOAD B    #83
+SUB A A    #84
+INC A    #85
 ADD A A    #86
 INC A    #87
 ADD A A    #88
 INC A    #89
 ADD A A    #90
-STORE B    #91
-JUMP 26    #92
-SUB B B    #93
-INC B    #94
-ADD B B    #95
+ADD A A    #91
+LOAD C    #92
+SUB B C    #93
+JZERO B 96    #94
+JUMP 217    #95
 SUB A A    #96
 INC A    #97
 ADD A A    #98
@@ -101,162 +101,541 @@ INC A    #99
 ADD A A    #100
 ADD A A    #101
 ADD A A    #102
-INC A    #103
-ADD A A    #104
+LOAD D    #103
+SUB A A    #104
 INC A    #105
 ADD A A    #106
-STORE B    #107
-SUB A A    #108
-INC A    #109
-ADD A A    #110
-INC A    #111
-ADD A A    #112
-ADD A A    #113
-ADD A A    #114
-INC A    #115
-ADD A A    #116
-INC A    #117
-ADD A A    #118
-LOAD B    #119
-SUB A A    #120
-LOAD C    #121
-SUB B C    #122
-JZERO B 125    #123
-JUMP 261    #124
-SUB A A    #125
+ADD A A    #107
+INC A    #108
+ADD A A    #109
+INC A    #110
+ADD A A    #111
+INC A    #112
+LOAD C    #113
+SUB B B    #114
+JODD C 117    #115
+JUMP 118    #116
+ADD B D    #117
+ADD D D    #118
+HALF C    #119
+JODD C 117    #120
+JZERO C 123    #121
+JUMP 118    #122
+SUB A A    #123
+INC A    #124
+ADD A A    #125
 INC A    #126
 ADD A A    #127
-INC A    #128
+ADD A A    #128
 ADD A A    #129
-ADD A A    #130
-ADD A A    #131
-INC A    #132
-ADD A A    #133
-INC A    #134
-ADD A A    #135
-LOAD A    #136
-SUB H H    #137
-INC H    #138
-ADD H H    #139
-ADD A H    #140
-SUB H H    #141
-INC H    #142
-ADD H H    #143
-SUB A H    #144
-LOAD B    #145
-SUB C C    #146
-COPY D B    #147
-SUB B C    #148
-JZERO B 151    #149
-JZERO C 153    #150
-SUB C D    #151
-JZERO C 153    #152
-SUB A A    #153
-INC A    #154
-ADD A A    #155
-INC A    #156
-ADD A A    #157
-ADD A A    #158
-ADD A A    #159
-INC A    #160
-ADD A A    #161
-INC A    #162
-ADD A A    #163
-LOAD B    #164
-SUB A A    #165
-INC A    #166
-ADD A A    #167
-INC A    #168
-ADD A A    #169
-ADD A A    #170
+STORE B    #130
+SUB B B    #131
+SUB A A    #132
+INC A    #133
+ADD A A    #134
+INC A    #135
+ADD A A    #136
+ADD A A    #137
+INC A    #138
+ADD A A    #139
+INC A    #140
+LOAD D    #141
+JUMP 169    #142
+SUB A A    #143
+INC A    #144
+ADD A A    #145
+INC A    #146
+ADD A A    #147
+ADD A A    #148
+ADD A A    #149
+LOAD B    #150
+COPY E D    #151
+COPY F D    #152
+SUB F B    #153
+JZERO F 156    #154
+JUMP 158    #155
+ADD D D    #156
+JUMP 152    #157
+COPY F E    #158
+SUB F B    #159
+JZERO F 162    #160
+JUMP 169    #161
+COPY F D    #162
+SUB F B    #163
+JZERO F 166    #164
+JUMP 167    #165
+SUB B D    #166
+HALF D    #167
+JUMP 158    #168
+SUB A A    #169
+INC A    #170
 ADD A A    #171
 INC A    #172
 ADD A A    #173
-INC A    #174
+ADD A A    #174
 ADD A A    #175
-LOAD C    #176
-ADD B C    #177
-SUB A A    #178
-INC A    #179
-STORE B    #180
-SUB A A    #181
-INC A    #182
-LOAD B    #183
-SUB A A    #184
-LOAD C    #185
-SUB B C    #186
-JZERO B 189    #187
-JUMP 222    #188
-SUB B B    #189
-SUB A A    #190
-INC A    #191
+STORE B    #176
+SUB A A    #177
+INC A    #178
+ADD A A    #179
+INC A    #180
+ADD A A    #181
+ADD A A    #182
+ADD A A    #183
+LOAD B    #184
+SUB A A    #185
+INC A    #186
+ADD A A    #187
+ADD A A    #188
+ADD A A    #189
+ADD A A    #190
+ADD A A    #191
 LOAD A    #192
 SUB H H    #193
-INC H    #194
-ADD H H    #195
-ADD A H    #196
-SUB H H    #197
-INC H    #198
-ADD H H    #199
-SUB A H    #200
-STORE B    #201
-SUB A A    #202
-INC A    #203
-LOAD B    #204
-SUB A A    #205
-INC A    #206
-ADD A A    #207
-INC A    #208
-ADD A A    #209
+ADD A H    #194
+SUB H H    #195
+INC H    #196
+SUB A H    #197
+STORE B    #198
+SUB A A    #199
+INC A    #200
+ADD A A    #201
+ADD A A    #202
+ADD A A    #203
+ADD A A    #204
+ADD A A    #205
+LOAD B    #206
+INC B    #207
+SUB A A    #208
+INC A    #209
 ADD A A    #210
 ADD A A    #211
-INC A    #212
+ADD A A    #212
 ADD A A    #213
-INC A    #214
-ADD A A    #215
-LOAD C    #216
-ADD B C    #217
-SUB A A    #218
-INC A    #219
-STORE B    #220
-JUMP 181    #221
-SUB A A    #222
-INC A    #223
+ADD A A    #214
+STORE B    #215
+JUMP 76    #216
+SUB B B    #217
+INC B    #218
+SUB A A    #219
+INC A    #220
+ADD A A    #221
+ADD A A    #222
+ADD A A    #223
 ADD A A    #224
-INC A    #225
-ADD A A    #226
-ADD A A    #227
-ADD A A    #228
-INC A    #229
+ADD A A    #225
+STORE B    #226
+SUB A A    #227
+INC A    #228
+ADD A A    #229
 ADD A A    #230
-INC A    #231
+ADD A A    #231
 ADD A A    #232
-LOAD B    #233
-PUT B    #234
+ADD A A    #233
+LOAD B    #234
 SUB A A    #235
 INC A    #236
 ADD A A    #237
 INC A    #238
 ADD A A    #239
-ADD A A    #240
+INC A    #240
 ADD A A    #241
-INC A    #242
-ADD A A    #243
-INC A    #244
-ADD A A    #245
-LOAD B    #246
-INC B    #247
-SUB A A    #248
-INC A    #249
+ADD A A    #242
+LOAD C    #243
+SUB B C    #244
+JZERO B 247    #245
+JUMP 280    #246
+SUB A A    #247
+INC A    #248
+ADD A A    #249
 ADD A A    #250
-INC A    #251
+ADD A A    #251
 ADD A A    #252
 ADD A A    #253
-ADD A A    #254
-INC A    #255
-ADD A A    #256
-INC A    #257
-ADD A A    #258
-STORE B    #259
-JUMP 108    #260
+LOAD A    #254
+SUB H H    #255
+ADD A H    #256
+SUB H H    #257
+INC H    #258
+SUB A H    #259
+LOAD B    #260
+PUT B    #261
+SUB A A    #262
+INC A    #263
+ADD A A    #264
+ADD A A    #265
+ADD A A    #266
+ADD A A    #267
+ADD A A    #268
+LOAD B    #269
+INC B    #270
+SUB A A    #271
+INC A    #272
+ADD A A    #273
+ADD A A    #274
+ADD A A    #275
+ADD A A    #276
+ADD A A    #277
+STORE B    #278
+JUMP 227    #279
+SUB B B    #280
+INC B    #281
+ADD B B    #282
+ADD B B    #283
+ADD B B    #284
+INC B    #285
+ADD B B    #286
+ADD B B    #287
+ADD B B    #288
+INC B    #289
+ADD B B    #290
+INC B    #291
+ADD B B    #292
+ADD B B    #293
+ADD B B    #294
+INC B    #295
+ADD B B    #296
+ADD B B    #297
+INC B    #298
+ADD B B    #299
+INC B    #300
+ADD B B    #301
+ADD B B    #302
+ADD B B    #303
+ADD B B    #304
+ADD B B    #305
+ADD B B    #306
+ADD B B    #307
+ADD B B    #308
+INC B    #309
+ADD B B    #310
+ADD B B    #311
+INC B    #312
+ADD B B    #313
+INC B    #314
+ADD B B    #315
+ADD B B    #316
+INC B    #317
+ADD B B    #318
+ADD B B    #319
+ADD B B    #320
+INC B    #321
+ADD B B    #322
+PUT B    #323
+SUB B B    #324
+INC B    #325
+ADD B B    #326
+SUB A A    #327
+INC A    #328
+ADD A A    #329
+ADD A A    #330
+ADD A A    #331
+ADD A A    #332
+ADD A A    #333
+STORE B    #334
+SUB A A    #335
+INC A    #336
+ADD A A    #337
+ADD A A    #338
+ADD A A    #339
+ADD A A    #340
+ADD A A    #341
+LOAD B    #342
+SUB A A    #343
+INC A    #344
+ADD A A    #345
+INC A    #346
+ADD A A    #347
+INC A    #348
+ADD A A    #349
+ADD A A    #350
+LOAD C    #351
+SUB B C    #352
+JZERO B 355    #353
+JUMP 577    #354
+SUB A A    #355
+INC A    #356
+ADD A A    #357
+ADD A A    #358
+ADD A A    #359
+ADD A A    #360
+ADD A A    #361
+LOAD A    #362
+SUB H H    #363
+ADD A H    #364
+SUB H H    #365
+INC H    #366
+SUB A H    #367
+LOAD B    #368
+SUB A A    #369
+INC A    #370
+ADD A A    #371
+ADD A A    #372
+INC A    #373
+ADD A A    #374
+INC A    #375
+ADD A A    #376
+STORE B    #377
+SUB A A    #378
+INC A    #379
+ADD A A    #380
+ADD A A    #381
+ADD A A    #382
+ADD A A    #383
+ADD A A    #384
+LOAD B    #385
+SUB A A    #386
+INC A    #387
+ADD A A    #388
+INC A    #389
+ADD A A    #390
+ADD A A    #391
+ADD A A    #392
+INC A    #393
+STORE B    #394
+SUB B B    #395
+INC B    #396
+SUB A A    #397
+INC A    #398
+ADD A A    #399
+INC A    #400
+ADD A A    #401
+ADD A A    #402
+ADD A A    #403
+INC A    #404
+LOAD C    #405
+SUB C B    #406
+JZERO C 535    #407
+SUB A A    #408
+INC A    #409
+ADD A A    #410
+INC A    #411
+ADD A A    #412
+ADD A A    #413
+ADD A A    #414
+INC A    #415
+LOAD B    #416
+SUB C C    #417
+INC C    #418
+SUB B C    #419
+SUB A A    #420
+INC A    #421
+ADD A A    #422
+INC A    #423
+ADD A A    #424
+ADD A A    #425
+INC A    #426
+ADD A A    #427
+STORE B    #428
+SUB A A    #429
+INC A    #430
+ADD A A    #431
+ADD A A    #432
+INC A    #433
+ADD A A    #434
+INC A    #435
+ADD A A    #436
+LOAD B    #437
+SUB A A    #438
+INC A    #439
+ADD A A    #440
+INC A    #441
+ADD A A    #442
+ADD A A    #443
+INC A    #444
+ADD A A    #445
+LOAD A    #446
+SUB H H    #447
+ADD A H    #448
+SUB H H    #449
+INC H    #450
+SUB A H    #451
+LOAD C    #452
+SUB C B    #453
+JZERO C 506    #454
+SUB A A    #455
+INC A    #456
+ADD A A    #457
+INC A    #458
+ADD A A    #459
+ADD A A    #460
+INC A    #461
+ADD A A    #462
+LOAD A    #463
+SUB H H    #464
+ADD A H    #465
+SUB H H    #466
+INC H    #467
+SUB A H    #468
+LOAD B    #469
+SUB A A    #470
+INC A    #471
+ADD A A    #472
+INC A    #473
+ADD A A    #474
+ADD A A    #475
+ADD A A    #476
+INC A    #477
+LOAD A    #478
+SUB H H    #479
+ADD A H    #480
+SUB H H    #481
+INC H    #482
+SUB A H    #483
+STORE B    #484
+SUB A A    #485
+INC A    #486
+ADD A A    #487
+INC A    #488
+ADD A A    #489
+ADD A A    #490
+ADD A A    #491
+INC A    #492
+LOAD B    #493
+SUB C C    #494
+INC C    #495
+SUB B C    #496
+SUB A A    #497
+INC A    #498
+ADD A A    #499
+INC A    #500
+ADD A A    #501
+ADD A A    #502
+ADD A A    #503
+INC A    #504
+STORE B    #505
+SUB A A    #506
+INC A    #507
+ADD A A    #508
+INC A    #509
+ADD A A    #510
+ADD A A    #511
+ADD A A    #512
+INC A    #513
+LOAD B    #514
+SUB A A    #515
+INC A    #516
+ADD A A    #517
+INC A    #518
+ADD A A    #519
+ADD A A    #520
+INC A    #521
+ADD A A    #522
+STORE B    #523
+SUB B B    #524
+SUB A A    #525
+INC A    #526
+ADD A A    #527
+INC A    #528
+ADD A A    #529
+ADD A A    #530
+ADD A A    #531
+INC A    #532
+STORE B    #533
+JUMP 395    #534
+SUB A A    #535
+INC A    #536
+ADD A A    #537
+ADD A A    #538
+INC A    #539
+ADD A A    #540
+INC A    #541
+ADD A A    #542
+LOAD B    #543
+SUB A A    #544
+INC A    #545
+ADD A A    #546
+INC A    #547
+ADD A A    #548
+ADD A A    #549
+INC A    #550
+ADD A A    #551
+LOAD A    #552
+SUB H H    #553
+ADD A H    #554
+SUB H H    #555
+INC H    #556
+SUB A H    #557
+STORE B    #558
+SUB A A    #559
+INC A    #560
+ADD A A    #561
+ADD A A    #562
+ADD A A    #563
+ADD A A    #564
+ADD A A    #565
+LOAD B    #566
+INC B    #567
+SUB A A    #568
+INC A    #569
+ADD A A    #570
+ADD A A    #571
+ADD A A    #572
+ADD A A    #573
+ADD A A    #574
+STORE B    #575
+JUMP 335    #576
+SUB B B    #577
+INC B    #578
+SUB A A    #579
+INC A    #580
+ADD A A    #581
+ADD A A    #582
+ADD A A    #583
+ADD A A    #584
+ADD A A    #585
+STORE B    #586
+SUB A A    #587
+INC A    #588
+ADD A A    #589
+ADD A A    #590
+ADD A A    #591
+ADD A A    #592
+ADD A A    #593
+LOAD B    #594
+SUB A A    #595
+INC A    #596
+ADD A A    #597
+INC A    #598
+ADD A A    #599
+INC A    #600
+ADD A A    #601
+ADD A A    #602
+LOAD C    #603
+SUB B C    #604
+JZERO B 607    #605
+JUMP 640    #606
+SUB A A    #607
+INC A    #608
+ADD A A    #609
+ADD A A    #610
+ADD A A    #611
+ADD A A    #612
+ADD A A    #613
+LOAD A    #614
+SUB H H    #615
+ADD A H    #616
+SUB H H    #617
+INC H    #618
+SUB A H    #619
+LOAD B    #620
+PUT B    #621
+SUB A A    #622
+INC A    #623
+ADD A A    #624
+ADD A A    #625
+ADD A A    #626
+ADD A A    #627
+ADD A A    #628
+LOAD B    #629
+INC B    #630
+SUB A A    #631
+INC A    #632
+ADD A A    #633
+ADD A A    #634
+ADD A A    #635
+ADD A A    #636
+ADD A A    #637
+STORE B    #638
+JUMP 587    #639
 HALT

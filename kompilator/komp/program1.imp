@@ -9,9 +9,10 @@ IN
     FOR i FROM 2 TO n DO
         IF sito(i) != 0 THEN
             j := i + i;
+            WRITE j;
             WHILE j <= n DO
                 sito(j) := 0;
-                WRITE sito(j);
+                [WRITE sito(j);]
                 j := j + i;
             ENDWHILE
             [WRITE i;]

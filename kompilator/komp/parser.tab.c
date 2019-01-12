@@ -92,6 +92,15 @@ int linoleo = 0;
 map<string, string> jumps;
 vector<string> instructs;
 
+map<string, int> registers;
+map<string, int> reg_was_stolen;
+
+void prepare_registers();
+string use_register();
+void free_register(string reg);
+int check_if_stolen(string reg);
+
+
 map<string, int> vars;
 map<string, struct arr*> arrays;
 map<string, int> labels;
@@ -219,7 +228,7 @@ void print_indirect_code(struct indirect_code* code);
 
 
 
-#line 223 "parser.tab.c" /* yacc.c:339  */
+#line 232 "parser.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -289,13 +298,13 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 158 "parser.y" /* yacc.c:355  */
+#line 167 "parser.y" /* yacc.c:355  */
 
 	struct ast* a;
 	char* string;
 	unsigned long long number;
 
-#line 299 "parser.tab.c" /* yacc.c:355  */
+#line 308 "parser.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -312,7 +321,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 316 "parser.tab.c" /* yacc.c:358  */
+#line 325 "parser.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -612,10 +621,10 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   188,   188,   197,   202,   209,   216,   221,   228,   232,
-     236,   240,   244,   248,   253,   258,   262,   269,   273,   277,
-     281,   285,   289,   296,   300,   304,   308,   312,   316,   323,
-     328,   335,   340,   346
+       0,   197,   197,   206,   211,   218,   225,   230,   237,   241,
+     245,   249,   253,   257,   262,   267,   271,   278,   282,   286,
+     290,   294,   298,   305,   309,   313,   317,   321,   325,   332,
+     337,   344,   349,   355
 };
 #endif
 
@@ -1461,279 +1470,279 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 189 "parser.y" /* yacc.c:1646  */
+#line 198 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("program", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "", 0);
 						handle_program((yyval.a));
 						// cout << "END" << endl;
 					}
-#line 1471 "parser.tab.c" /* yacc.c:1646  */
+#line 1480 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 198 "parser.y" /* yacc.c:1646  */
+#line 207 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-1].string), 0);
 						(yyval.a) = newast("declarations", (yyvsp[-2].a), id, NULL, NULL, "dec_var", 0);
 					}
-#line 1480 "parser.tab.c" /* yacc.c:1646  */
+#line 1489 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 203 "parser.y" /* yacc.c:1646  */
+#line 212 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-6].string), 0);
 						struct ast* num1 = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[-4].number));
 						struct ast* num2 = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[-2].number));
 						(yyval.a) = newast("declarations", (yyvsp[-7].a), id, num1, num2, "dec_arr", 0);
 					}
-#line 1491 "parser.tab.c" /* yacc.c:1646  */
+#line 1500 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 209 "parser.y" /* yacc.c:1646  */
+#line 218 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = NULL;
 						// $$ =  newast("NULL", NULL, NULL, NULL, NULL, "NULL", 0);
 					}
-#line 1500 "parser.tab.c" /* yacc.c:1646  */
+#line 1509 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 217 "parser.y" /* yacc.c:1646  */
+#line 226 "parser.y" /* yacc.c:1646  */
     {
 
 						(yyval.a) = newast("commands", (yyvsp[-1].a), (yyvsp[0].a), NULL, NULL, "", 0);
 					}
-#line 1509 "parser.tab.c" /* yacc.c:1646  */
+#line 1518 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 222 "parser.y" /* yacc.c:1646  */
+#line 231 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("commands", (yyvsp[0].a), NULL, NULL, NULL, "", 0);
 					}
-#line 1517 "parser.tab.c" /* yacc.c:1646  */
+#line 1526 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 229 "parser.y" /* yacc.c:1646  */
+#line 238 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, ":=", 0);
 					}
-#line 1525 "parser.tab.c" /* yacc.c:1646  */
+#line 1534 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 233 "parser.y" /* yacc.c:1646  */
+#line 242 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("command", (yyvsp[-5].a), (yyvsp[-3].a), (yyvsp[-1].a), NULL, "if_else", 0);
                     }
-#line 1533 "parser.tab.c" /* yacc.c:1646  */
+#line 1542 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 237 "parser.y" /* yacc.c:1646  */
+#line 246 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "if", 0);
                     }
-#line 1541 "parser.tab.c" /* yacc.c:1646  */
+#line 1550 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 241 "parser.y" /* yacc.c:1646  */
+#line 250 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "while", 0);
                     }
-#line 1549 "parser.tab.c" /* yacc.c:1646  */
+#line 1558 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 245 "parser.y" /* yacc.c:1646  */
+#line 254 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "do_while", 0);
 					}
-#line 1557 "parser.tab.c" /* yacc.c:1646  */
+#line 1566 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 249 "parser.y" /* yacc.c:1646  */
+#line 258 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-7].string), 0);
 						(yyval.a) = newast("command", id, (yyvsp[-5].a), (yyvsp[-3].a), (yyvsp[-1].a), "for_to", 0);
 		 			}
-#line 1566 "parser.tab.c" /* yacc.c:1646  */
+#line 1575 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 254 "parser.y" /* yacc.c:1646  */
+#line 263 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-7].string), 0);
 						(yyval.a) = newast("command", id, (yyvsp[-5].a), (yyvsp[-3].a), (yyvsp[-1].a), "for_downto", 0);
                     }
-#line 1575 "parser.tab.c" /* yacc.c:1646  */
+#line 1584 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 259 "parser.y" /* yacc.c:1646  */
+#line 268 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("command", (yyvsp[-1].a), NULL, NULL, NULL, "read", 0);
 					}
-#line 1583 "parser.tab.c" /* yacc.c:1646  */
+#line 1592 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 263 "parser.y" /* yacc.c:1646  */
+#line 272 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("command", (yyvsp[-1].a), NULL, NULL, NULL, "write", 0);
 					}
-#line 1591 "parser.tab.c" /* yacc.c:1646  */
+#line 1600 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 270 "parser.y" /* yacc.c:1646  */
+#line 279 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("expression", (yyvsp[0].a), NULL, NULL, NULL, "value", 0);
 					}
-#line 1599 "parser.tab.c" /* yacc.c:1646  */
+#line 1608 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 274 "parser.y" /* yacc.c:1646  */
+#line 283 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "+", 0);
 					}
-#line 1607 "parser.tab.c" /* yacc.c:1646  */
+#line 1616 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 278 "parser.y" /* yacc.c:1646  */
+#line 287 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "-", 0);
 					}
-#line 1615 "parser.tab.c" /* yacc.c:1646  */
+#line 1624 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 282 "parser.y" /* yacc.c:1646  */
+#line 291 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "*", 0);
 					}
-#line 1623 "parser.tab.c" /* yacc.c:1646  */
+#line 1632 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 286 "parser.y" /* yacc.c:1646  */
+#line 295 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "/", 0);
 					}
-#line 1631 "parser.tab.c" /* yacc.c:1646  */
+#line 1640 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 290 "parser.y" /* yacc.c:1646  */
+#line 299 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "%", 0);
 					}
-#line 1639 "parser.tab.c" /* yacc.c:1646  */
+#line 1648 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 297 "parser.y" /* yacc.c:1646  */
+#line 306 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "=", 0);
 					}
-#line 1647 "parser.tab.c" /* yacc.c:1646  */
+#line 1656 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 301 "parser.y" /* yacc.c:1646  */
+#line 310 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "!=", 0);
 					}
-#line 1655 "parser.tab.c" /* yacc.c:1646  */
+#line 1664 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 305 "parser.y" /* yacc.c:1646  */
+#line 314 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "<", 0);
 					}
-#line 1663 "parser.tab.c" /* yacc.c:1646  */
+#line 1672 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 309 "parser.y" /* yacc.c:1646  */
+#line 318 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, ">", 0);
 					}
-#line 1671 "parser.tab.c" /* yacc.c:1646  */
+#line 1680 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 313 "parser.y" /* yacc.c:1646  */
+#line 322 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "<=", 0);
 					}
-#line 1679 "parser.tab.c" /* yacc.c:1646  */
+#line 1688 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 317 "parser.y" /* yacc.c:1646  */
+#line 326 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, ">=", 0);
-					}
-#line 1687 "parser.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 29:
-#line 324 "parser.y" /* yacc.c:1646  */
-    {
-						struct ast* num = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[0].number));
-						(yyval.a) = newast("value", num, NULL, NULL, NULL, "", 0);
 					}
 #line 1696 "parser.tab.c" /* yacc.c:1646  */
     break;
 
-  case 30:
-#line 329 "parser.y" /* yacc.c:1646  */
+  case 29:
+#line 333 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("value", (yyvsp[0].a), NULL, NULL, NULL, "", 0);
+						struct ast* num = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[0].number));
+						(yyval.a) = newast("value", num, NULL, NULL, NULL, "", 0);
 					}
-#line 1704 "parser.tab.c" /* yacc.c:1646  */
+#line 1705 "parser.tab.c" /* yacc.c:1646  */
     break;
 
-  case 31:
-#line 336 "parser.y" /* yacc.c:1646  */
+  case 30:
+#line 338 "parser.y" /* yacc.c:1646  */
     {
-						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[0].string), 0);
-						(yyval.a) = newast("identifier_id", id, NULL, NULL, NULL, "", 0);
+						(yyval.a) = newast("value", (yyvsp[0].a), NULL, NULL, NULL, "", 0);
 					}
 #line 1713 "parser.tab.c" /* yacc.c:1646  */
     break;
 
+  case 31:
+#line 345 "parser.y" /* yacc.c:1646  */
+    {
+						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[0].string), 0);
+						(yyval.a) = newast("identifier_id", id, NULL, NULL, NULL, "", 0);
+					}
+#line 1722 "parser.tab.c" /* yacc.c:1646  */
+    break;
+
   case 32:
-#line 341 "parser.y" /* yacc.c:1646  */
+#line 350 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id1 = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-3].string), 0);
 						struct ast* id2 = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-1].string), 0);
 						(yyval.a) = newast("identifier_id_id", id1, id2, NULL, NULL, "", 0);
 					}
-#line 1723 "parser.tab.c" /* yacc.c:1646  */
+#line 1732 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 347 "parser.y" /* yacc.c:1646  */
+#line 356 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-3].string), 0);
 						struct ast* num = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[-1].number));
 						(yyval.a) = newast("identifier_id_num", id, num, NULL, NULL, "", 0);
 					}
-#line 1733 "parser.tab.c" /* yacc.c:1646  */
+#line 1742 "parser.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1737 "parser.tab.c" /* yacc.c:1646  */
+#line 1746 "parser.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1961,7 +1970,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 355 "parser.y" /* yacc.c:1906  */
+#line 364 "parser.y" /* yacc.c:1906  */
 
 
 
@@ -1992,6 +2001,54 @@ void yyerror(char const *s){
 	// finishCompilation();
 	fprintf(stderr, "%s.\n", s);
 	exit(1);
+}
+
+// REJESTRY
+
+void prepare_registers() {
+	registers["B"] = 0;
+	registers["C"] = 0;
+	registers["D"] = 0;
+	registers["E"] = 0;
+	registers["F"] = 0;
+	registers["G"] = 0;
+	registers["H"] = 0;
+
+	reg_was_stolen["B"] = 0;
+	reg_was_stolen["C"] = 0;
+	reg_was_stolen["D"] = 0;
+	reg_was_stolen["E"] = 0;
+	reg_was_stolen["F"] = 0;
+	reg_was_stolen["G"] = 0;
+	reg_was_stolen["H"] = 0;
+}
+
+string use_register() {
+	for(map<string, int>::iterator it=registers.begin(); it!=registers.end(); ++it) {
+		if(it->second == 0) {
+			registers[it->first] = 1;
+			return it->first;
+		}
+	}
+    for(map<string, int>::iterator it=reg_was_stolen.begin(); it!=reg_was_stolen.end(); ++it) {
+		if(it->second == 0) {
+			reg_was_stolen[it->first] = 1;
+			return it->first;
+		}
+	}
+}
+
+void free_register(string reg) {
+	registers[reg] = 0;
+}
+
+int check_if_stolen(string reg) {
+	if(reg_was_stolen[reg] == 1) {
+		reg_was_stolen[reg] = 0;
+		return 1;
+	} else {
+		return 0;
+	}
 }
 
 // LABEL ITERATOR
@@ -2650,6 +2707,7 @@ void handle_condition(struct ast* condition_node, struct variable* end_label, ve
 // \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
 // ########## <, <=, =, != ###################
 void _handle_lt(struct ast* condition_node, struct variable* end_label, vector<struct indirect_code*>* vec) {
+	// string reg_gen = use_register();
 	struct variable* reg_B = newvariable("REG", "B", "", 0);
 	struct variable* reg_C = newvariable("REG", "C", "", 0);
 	
@@ -2770,7 +2828,7 @@ void _handle_neq(struct ast* condition_node, struct variable* end_label, vector<
 	sub = newindirect_code("SUB", reg_C, reg_D);
 	(*vec).push_back(sub);
 	// JZERO -> @END
-	jzero = newindirect_code("@JZERO", reg_C, lab2);
+	jzero = newindirect_code("@JZERO", reg_C, end_label);
 	(*vec).push_back(jzero);
 	// LABEL @lab2
 	label = newindirect_code("@LABEL", lab2, NULL);
@@ -3098,14 +3156,18 @@ void handle_expression(struct ast* exp_node, string result_reg, vector<struct in
 			struct variable* lab4 = get_next_label_id();
 			struct variable* lab5 = get_next_label_id();
 			struct variable* lab6 = get_next_label_id();
-			struct variable* lab7 = get_next_label_id();
 
 			(*vec)[(*vec).size()-2] = newindirect_code("SUB", reg1, reg1);
-			(*vec)[(*vec).size()-1] = handle_value(exp_node->s_1, reg2->id1);
-			(*vec).push_back(handle_value(exp_node->s_2, reg3->id1));
+			(*vec)[(*vec).size()-1] = handle_value(exp_node->s_2, reg3->id1);
+			
+			(*vec).push_back(newindirect_code("@JZERO", reg3, lab4)); // dzielenie przez 0
+			(*vec).push_back(handle_value(exp_node->s_1, reg2->id1));
 
-			struct indirect_code* copy_4_3 = newindirect_code("@COPY", reg4, reg3);
-			(*vec).push_back(copy_4_3);
+
+			(*vec).push_back(newindirect_code("SUB", reg4, reg4));
+			struct indirect_code* inc_4 = newindirect_code("INC", reg4, NULL);
+			(*vec).push_back(inc_4);
+
 			struct indirect_code* lab1_code = newindirect_code("@LABEL", lab1, NULL);
 			(*vec).push_back(lab1_code);
 			struct indirect_code* copy_5_3 = newindirect_code("@COPY", reg5, reg3);
@@ -3120,43 +3182,40 @@ void handle_expression(struct ast* exp_node, string result_reg, vector<struct in
 			(*vec).push_back(lab2_code);
 			struct indirect_code* add_3_3 = newindirect_code("ADD", reg3, reg3);
 			(*vec).push_back(add_3_3);
+			// struct indirect_code* inc_4 = newindirect_code("INC", reg4, NULL);
+			(*vec).push_back(inc_4);
 			struct indirect_code* jump_1 = newindirect_code("@JUMP", lab1, NULL);
 			(*vec).push_back(jump_1);
 			struct indirect_code* lab3_code = newindirect_code("@LABEL", lab3, NULL);
 			(*vec).push_back(lab3_code);
-			struct indirect_code* copy_5_4 = newindirect_code("@COPY", reg5, reg4);
-			(*vec).push_back(copy_5_4);
-			// struct indirect_code* sub = newindirect_code("@JZERO", reg3, lab5);
-			(*vec).push_back(sub_5_2);
-			struct indirect_code* jzero_r5_4 = newindirect_code("@JZERO", reg5, lab4);
-			(*vec).push_back(jzero_r5_4);
-			struct indirect_code* jump_5 = newindirect_code("@JUMP", lab5, NULL);
-			(*vec).push_back(jump_5);
-			struct indirect_code* lab4_code = newindirect_code("@LABEL", lab4, NULL);
-			(*vec).push_back(lab4_code);
+			struct indirect_code* jzero_r4_4 = newindirect_code("@JZERO", reg4, lab4);
+			(*vec).push_back(jzero_r4_4);
 			struct indirect_code* add_1_1 = newindirect_code("ADD", reg1, reg1);
 			(*vec).push_back(add_1_1);
-			// struct indirect_code* copy_5_3 = newindirect_code("@JUMP", lab7, NULL);
+			// struct indirect_code* jump_5 = newindirect_code("@JUMP", lab5, NULL);
 			(*vec).push_back(copy_5_3);
-			// struct indirect_code* sub_5_2 = newindirect_code("@LABEL", lab6, NULL);
+			// struct indirect_code* lab4_code = newindirect_code("@LABEL", lab4, NULL);
 			(*vec).push_back(sub_5_2);
-			struct indirect_code* jzero_r5_6 = newindirect_code("@JZERO", reg5, lab6);
-			(*vec).push_back(jzero_r5_6);
-			struct indirect_code* jump_7 = newindirect_code("@JUMP", lab7, NULL);
-			(*vec).push_back(jump_7);
-			struct indirect_code* lab6_code = newindirect_code("@LABEL", lab6, NULL);
-			(*vec).push_back(lab6_code);
+			struct indirect_code* jzero_r5_5 = newindirect_code("@JZERO", reg5, lab5);
+			(*vec).push_back(jzero_r5_5);
+			struct indirect_code* jump_6 = newindirect_code("@JUMP", lab6, NULL);
+			(*vec).push_back(jump_6);
+			struct indirect_code* lab5_code = newindirect_code("@LABEL", lab5, NULL);
+			(*vec).push_back(lab5_code);
 			struct indirect_code* sub_2_3 = newindirect_code("SUB", reg2, reg3);
 			(*vec).push_back(sub_2_3);
 			struct indirect_code* inc_1 = newindirect_code("INC", reg1, NULL);
 			(*vec).push_back(inc_1);
-			struct indirect_code* lab7_code = newindirect_code("@LABEL", lab7, NULL);
-			(*vec).push_back(lab7_code);
+			struct indirect_code* lab6_code = newindirect_code("@LABEL", lab6, NULL);
+			(*vec).push_back(lab6_code);
 			struct indirect_code* half_3 = newindirect_code("@HALF", reg3, NULL);
 			(*vec).push_back(half_3);
+			struct indirect_code* dec_4 = newindirect_code("DEC", reg4, NULL);
+			(*vec).push_back(dec_4);
+			// struct indirect_code* jump_3 = newindirect_code("@JUMP", lab3, NULL);
 			(*vec).push_back(jump_3);
-			struct indirect_code* lab5_code = newindirect_code("@LABEL", lab5, NULL);
-			(*vec).push_back(lab5_code);
+			struct indirect_code* lab4_code = newindirect_code("@LABEL", lab4, NULL);
+			(*vec).push_back(lab4_code);
 			
 			
 
@@ -3177,9 +3236,10 @@ void handle_expression(struct ast* exp_node, string result_reg, vector<struct in
 			struct variable* lab6 = get_next_label_id();
 			struct variable* lab7 = get_next_label_id();
 
-			// (*vec)[(*vec).size()-2] = newindirect_code("SUB", reg1, reg1);
-			(*vec)[(*vec).size()-2] = handle_value(exp_node->s_1, reg2->id1);
+			(*vec)[(*vec).size()-2] = newindirect_code("SUB", reg1, reg1);
 			(*vec)[(*vec).size()-1] = handle_value(exp_node->s_2, reg3->id1);
+			(*vec).push_back(newindirect_code("@JZERO", reg3, lab5));
+			(*vec).push_back(handle_value(exp_node->s_1, reg2->id1));
 
 			struct indirect_code* copy_4_3 = newindirect_code("@COPY", reg4, reg3);
 			(*vec).push_back(copy_4_3);
