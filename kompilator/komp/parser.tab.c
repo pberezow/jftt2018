@@ -92,26 +92,19 @@ int linoleo = 0;
 map<string, string> jumps;
 vector<string> instructs;
 
-map<string, int> registers;
-map<string, int> reg_was_stolen;
-
-void prepare_registers();
-string use_register();
-void free_register(string reg);
-int check_if_stolen(string reg);
-
+vector<struct indirect_code*> codes;
 
 map<string, int> vars;
 map<string, struct arr*> arrays;
 map<string, int> labels;
 
 struct variable* get_next_label_id();
-struct block* get_next_iter(struct ast* ID_node);
+void get_next_iter(struct ast* ID_node, struct ast* value_node);
 
 
 // PRINTS
 void print_blocks(struct block* code_block);
-void print_indirect_code(struct indirect_code* code);
+void print_indirect_code();
 
 // AST
 
@@ -169,45 +162,45 @@ void print_indirect_code(struct indirect_code* code);
 
 	void handle_program(struct ast* root);
 	// DONE
-	struct block* handle_commands(struct ast* commands_node);
+	void handle_commands(struct ast* commands_node);
 
-	struct block* handle_if(struct ast* if_node);
-	struct block* handle_if_else(struct ast* if_else_node);
+	void handle_if(struct ast* if_node);
+	void handle_if_else(struct ast* if_else_node);
 
-	struct block* handle_while(struct ast* while_node);
+	void handle_while(struct ast* while_node);
 
-	struct block* handle_do_while(struct ast* do_while_node);
+	void handle_do_while(struct ast* do_while_node);
 	
-	struct block* handle_for_to(struct ast* for_to_node);
+	void handle_for_to(struct ast* for_to_node);
 
-	struct block* handle_for_downto(struct ast* for_to_node);
+	void handle_for_downto(struct ast* for_to_node);
 
 	// DONE
-	void handle_condition(struct ast* condition_node, struct variable* end_label, vector<struct indirect_code*>* vec);
-	void _handle_lt(struct ast* condition_node, struct variable* end_label, vector<struct indirect_code*>* vec);
-	void _handle_lte(struct ast* condition_node, struct variable* end_label, vector<struct indirect_code*>* vec);
-	void _handle_eq(struct ast* condition_node, struct variable* end_label, vector<struct indirect_code*>* vec);
-	void _handle_neq(struct ast* condition_node, struct variable* end_label, vector<struct indirect_code*>* vec);
+	void handle_condition(struct ast* condition_node, struct variable* end_label);
+	void _handle_lt(struct ast* condition_node, struct variable* end_label);
+	void _handle_lte(struct ast* condition_node, struct variable* end_label);
+	void _handle_eq(struct ast* condition_node, struct variable* end_label);
+	void _handle_neq(struct ast* condition_node, struct variable* end_label);
 	//DONE - wczytywanie
-	struct indirect_code* handle_value(struct ast* value_node, string reg);
+	void handle_value(struct ast* value_node, string reg);
 	//DONE - zapisywanie
-	struct indirect_code* handle_store(struct ast* value_node, string reg);
+	void handle_store(struct ast* value_node, string reg);
 	//DONE - dzialania
-	void handle_expression(struct ast* exp_node, string result_reg, vector<struct indirect_code*>* vec);
+	void handle_expression(struct ast* exp_node, string result_reg);
 	//DONE - przypisanie a := b + c
-	struct block* handle_assign(struct ast* asg_node);
+	void handle_assign(struct ast* asg_node);
 	//
-	struct block* handle_write(struct ast* write_node);
+	void handle_write(struct ast* write_node);
 	//
-	struct block* handle_read(struct ast* read_node);
+	void handle_read(struct ast* read_node);
 	//IN PROGRESS - assign
-	struct block* handle_command(struct ast* command_node);
+	void handle_command(struct ast* command_node);
 
 
 	int semantic_analyse(struct ast* root);
 	void declare_variables(struct ast* declarations);
 
-	void gen_assembler(struct block* root);
+	void gen_assembler();
 
 	void gen_load(struct indirect_code* code);
 	void gen_store(struct indirect_code* code);
@@ -228,7 +221,7 @@ void print_indirect_code(struct indirect_code* code);
 
 
 
-#line 232 "parser.tab.c" /* yacc.c:339  */
+#line 225 "parser.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -298,13 +291,13 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 167 "parser.y" /* yacc.c:355  */
+#line 160 "parser.y" /* yacc.c:355  */
 
 	struct ast* a;
 	char* string;
 	unsigned long long number;
 
-#line 308 "parser.tab.c" /* yacc.c:355  */
+#line 301 "parser.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -321,7 +314,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 325 "parser.tab.c" /* yacc.c:358  */
+#line 318 "parser.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -621,10 +614,10 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   197,   197,   206,   211,   218,   225,   230,   237,   241,
-     245,   249,   253,   257,   262,   267,   271,   278,   282,   286,
-     290,   294,   298,   305,   309,   313,   317,   321,   325,   332,
-     337,   344,   349,   355
+       0,   190,   190,   198,   203,   210,   216,   221,   228,   232,
+     236,   240,   244,   248,   253,   258,   262,   269,   273,   277,
+     281,   285,   289,   296,   300,   304,   308,   312,   316,   323,
+     328,   335,   340,   346
 };
 #endif
 
@@ -1470,279 +1463,277 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 198 "parser.y" /* yacc.c:1646  */
+#line 191 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("program", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "", 0);
 						handle_program((yyval.a));
-						// cout << "END" << endl;
 					}
-#line 1480 "parser.tab.c" /* yacc.c:1646  */
+#line 1472 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 207 "parser.y" /* yacc.c:1646  */
+#line 199 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-1].string), 0);
 						(yyval.a) = newast("declarations", (yyvsp[-2].a), id, NULL, NULL, "dec_var", 0);
 					}
-#line 1489 "parser.tab.c" /* yacc.c:1646  */
+#line 1481 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 212 "parser.y" /* yacc.c:1646  */
+#line 204 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-6].string), 0);
 						struct ast* num1 = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[-4].number));
 						struct ast* num2 = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[-2].number));
 						(yyval.a) = newast("declarations", (yyvsp[-7].a), id, num1, num2, "dec_arr", 0);
 					}
-#line 1500 "parser.tab.c" /* yacc.c:1646  */
+#line 1492 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 218 "parser.y" /* yacc.c:1646  */
+#line 210 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = NULL;
-						// $$ =  newast("NULL", NULL, NULL, NULL, NULL, "NULL", 0);
 					}
-#line 1509 "parser.tab.c" /* yacc.c:1646  */
+#line 1500 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 226 "parser.y" /* yacc.c:1646  */
+#line 217 "parser.y" /* yacc.c:1646  */
     {
 
 						(yyval.a) = newast("commands", (yyvsp[-1].a), (yyvsp[0].a), NULL, NULL, "", 0);
 					}
-#line 1518 "parser.tab.c" /* yacc.c:1646  */
+#line 1509 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 231 "parser.y" /* yacc.c:1646  */
+#line 222 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("commands", (yyvsp[0].a), NULL, NULL, NULL, "", 0);
 					}
-#line 1526 "parser.tab.c" /* yacc.c:1646  */
+#line 1517 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 238 "parser.y" /* yacc.c:1646  */
+#line 229 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, ":=", 0);
 					}
-#line 1534 "parser.tab.c" /* yacc.c:1646  */
+#line 1525 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 242 "parser.y" /* yacc.c:1646  */
+#line 233 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("command", (yyvsp[-5].a), (yyvsp[-3].a), (yyvsp[-1].a), NULL, "if_else", 0);
                     }
-#line 1542 "parser.tab.c" /* yacc.c:1646  */
+#line 1533 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 246 "parser.y" /* yacc.c:1646  */
+#line 237 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "if", 0);
                     }
-#line 1550 "parser.tab.c" /* yacc.c:1646  */
+#line 1541 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 250 "parser.y" /* yacc.c:1646  */
+#line 241 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "while", 0);
                     }
-#line 1558 "parser.tab.c" /* yacc.c:1646  */
+#line 1549 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 254 "parser.y" /* yacc.c:1646  */
+#line 245 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "do_while", 0);
 					}
-#line 1566 "parser.tab.c" /* yacc.c:1646  */
+#line 1557 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 258 "parser.y" /* yacc.c:1646  */
+#line 249 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-7].string), 0);
 						(yyval.a) = newast("command", id, (yyvsp[-5].a), (yyvsp[-3].a), (yyvsp[-1].a), "for_to", 0);
 		 			}
-#line 1575 "parser.tab.c" /* yacc.c:1646  */
+#line 1566 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 263 "parser.y" /* yacc.c:1646  */
+#line 254 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-7].string), 0);
 						(yyval.a) = newast("command", id, (yyvsp[-5].a), (yyvsp[-3].a), (yyvsp[-1].a), "for_downto", 0);
                     }
-#line 1584 "parser.tab.c" /* yacc.c:1646  */
+#line 1575 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 268 "parser.y" /* yacc.c:1646  */
+#line 259 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("command", (yyvsp[-1].a), NULL, NULL, NULL, "read", 0);
 					}
-#line 1592 "parser.tab.c" /* yacc.c:1646  */
+#line 1583 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 272 "parser.y" /* yacc.c:1646  */
+#line 263 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("command", (yyvsp[-1].a), NULL, NULL, NULL, "write", 0);
 					}
-#line 1600 "parser.tab.c" /* yacc.c:1646  */
+#line 1591 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 279 "parser.y" /* yacc.c:1646  */
+#line 270 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("expression", (yyvsp[0].a), NULL, NULL, NULL, "value", 0);
 					}
-#line 1608 "parser.tab.c" /* yacc.c:1646  */
+#line 1599 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 283 "parser.y" /* yacc.c:1646  */
+#line 274 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "+", 0);
 					}
-#line 1616 "parser.tab.c" /* yacc.c:1646  */
+#line 1607 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 287 "parser.y" /* yacc.c:1646  */
+#line 278 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "-", 0);
 					}
-#line 1624 "parser.tab.c" /* yacc.c:1646  */
+#line 1615 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 291 "parser.y" /* yacc.c:1646  */
+#line 282 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "*", 0);
 					}
-#line 1632 "parser.tab.c" /* yacc.c:1646  */
+#line 1623 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 295 "parser.y" /* yacc.c:1646  */
+#line 286 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "/", 0);
 					}
-#line 1640 "parser.tab.c" /* yacc.c:1646  */
+#line 1631 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 299 "parser.y" /* yacc.c:1646  */
+#line 290 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "%", 0);
 					}
-#line 1648 "parser.tab.c" /* yacc.c:1646  */
+#line 1639 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 306 "parser.y" /* yacc.c:1646  */
+#line 297 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "=", 0);
 					}
-#line 1656 "parser.tab.c" /* yacc.c:1646  */
+#line 1647 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 310 "parser.y" /* yacc.c:1646  */
+#line 301 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "!=", 0);
 					}
-#line 1664 "parser.tab.c" /* yacc.c:1646  */
+#line 1655 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 314 "parser.y" /* yacc.c:1646  */
+#line 305 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "<", 0);
 					}
-#line 1672 "parser.tab.c" /* yacc.c:1646  */
+#line 1663 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 318 "parser.y" /* yacc.c:1646  */
+#line 309 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, ">", 0);
 					}
-#line 1680 "parser.tab.c" /* yacc.c:1646  */
+#line 1671 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 322 "parser.y" /* yacc.c:1646  */
+#line 313 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "<=", 0);
 					}
-#line 1688 "parser.tab.c" /* yacc.c:1646  */
+#line 1679 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 326 "parser.y" /* yacc.c:1646  */
+#line 317 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, ">=", 0);
 					}
-#line 1696 "parser.tab.c" /* yacc.c:1646  */
+#line 1687 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 333 "parser.y" /* yacc.c:1646  */
+#line 324 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* num = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[0].number));
 						(yyval.a) = newast("value", num, NULL, NULL, NULL, "", 0);
 					}
-#line 1705 "parser.tab.c" /* yacc.c:1646  */
+#line 1696 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 338 "parser.y" /* yacc.c:1646  */
+#line 329 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("value", (yyvsp[0].a), NULL, NULL, NULL, "", 0);
 					}
-#line 1713 "parser.tab.c" /* yacc.c:1646  */
+#line 1704 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 345 "parser.y" /* yacc.c:1646  */
+#line 336 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[0].string), 0);
 						(yyval.a) = newast("identifier_id", id, NULL, NULL, NULL, "", 0);
 					}
-#line 1722 "parser.tab.c" /* yacc.c:1646  */
+#line 1713 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 350 "parser.y" /* yacc.c:1646  */
+#line 341 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id1 = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-3].string), 0);
 						struct ast* id2 = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-1].string), 0);
 						(yyval.a) = newast("identifier_id_id", id1, id2, NULL, NULL, "", 0);
 					}
-#line 1732 "parser.tab.c" /* yacc.c:1646  */
+#line 1723 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 356 "parser.y" /* yacc.c:1646  */
+#line 347 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-3].string), 0);
 						struct ast* num = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[-1].number));
 						(yyval.a) = newast("identifier_id_num", id, num, NULL, NULL, "", 0);
 					}
-#line 1742 "parser.tab.c" /* yacc.c:1646  */
+#line 1733 "parser.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1746 "parser.tab.c" /* yacc.c:1646  */
+#line 1737 "parser.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1970,7 +1961,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 364 "parser.y" /* yacc.c:1906  */
+#line 355 "parser.y" /* yacc.c:1906  */
 
 
 
@@ -1989,67 +1980,16 @@ int main(int argc, char **argv) {
 	yyin = infile;
 	yyparse();
 
-	// initializeCompilation();
-    // yyparse();
-    // finishCompilation();
     // printf("Kompilacja zakonczona.\n");
 	outfile.close();
 	return 0;
 }
 
 void yyerror(char const *s){
-	// finishCompilation();
 	fprintf(stderr, "%s.\n", s);
 	exit(1);
 }
 
-// REJESTRY
-
-void prepare_registers() {
-	registers["B"] = 0;
-	registers["C"] = 0;
-	registers["D"] = 0;
-	registers["E"] = 0;
-	registers["F"] = 0;
-	registers["G"] = 0;
-	registers["H"] = 0;
-
-	reg_was_stolen["B"] = 0;
-	reg_was_stolen["C"] = 0;
-	reg_was_stolen["D"] = 0;
-	reg_was_stolen["E"] = 0;
-	reg_was_stolen["F"] = 0;
-	reg_was_stolen["G"] = 0;
-	reg_was_stolen["H"] = 0;
-}
-
-string use_register() {
-	for(map<string, int>::iterator it=registers.begin(); it!=registers.end(); ++it) {
-		if(it->second == 0) {
-			registers[it->first] = 1;
-			return it->first;
-		}
-	}
-    for(map<string, int>::iterator it=reg_was_stolen.begin(); it!=reg_was_stolen.end(); ++it) {
-		if(it->second == 0) {
-			reg_was_stolen[it->first] = 1;
-			return it->first;
-		}
-	}
-}
-
-void free_register(string reg) {
-	registers[reg] = 0;
-}
-
-int check_if_stolen(string reg) {
-	if(reg_was_stolen[reg] == 1) {
-		reg_was_stolen[reg] = 0;
-		return 1;
-	} else {
-		return 0;
-	}
-}
 
 // LABEL ITERATOR
 struct variable* get_next_label_id() {
@@ -2060,24 +2000,16 @@ struct variable* get_next_label_id() {
 }
 
 // LOOP ITERATOR
-struct block* get_next_iter(struct ast* ID_node, struct ast* value_node) {
-	struct block* iter_block = newblock();
+void get_next_iter(struct ast* ID_node, struct ast* value_node) {
 	struct variable* iterator = newvariable("ITER", ID_node->value, "", 0);
 	// do mapy
 	vars[ID_node->value] = iterator_id;
-
-	cout << "ITERATOR " << ID_node->value << "  id: " << iterator_id << endl;
-
 	iterator_id++;
 
-	struct indirect_code* code = handle_value(value_node, "B");
-	iter_block->codes.push_back(code);
+	handle_value(value_node, "B");
 
 	struct variable* reg_B = newvariable("REG", "B", "", 0);
-	code = newindirect_code("@STORE", reg_B, iterator);
-	iter_block->codes.push_back(code);
-
-	return iter_block;
+	codes.push_back(newindirect_code("@STORE", reg_B, iterator));
 }
 
 // AST
@@ -2090,8 +2022,6 @@ struct ast* newast(string type, struct ast* s_1, struct ast* s_2, struct ast* s_
         exit(1);
     }
 
-	// cout << "type: " << type << "   value: " << value << endl;
-	// cout << typeid(type).name() << endl;
     a->type = type;
     a->s_1 = s_1;
 	a->s_2 = s_2;
@@ -2101,7 +2031,6 @@ struct ast* newast(string type, struct ast* s_1, struct ast* s_2, struct ast* s_
     a->value = value;
 	a->number = number;
 
-	// cout << type << endl;
     return a;
 }
 
@@ -2115,23 +2044,28 @@ struct block* newblock() {
         exit(1);
 	}
 
+
 	a->prev = NULL;
 	a->next = NULL;
+
+	cout <<"SIZE " << a << endl;
+	return a;
 }
 
 void print_blocks(struct block* code_block) {
+	// struct block* tmp = code_block;
 
-	do {
-		cout << "--------BLOCK--------" << endl;
-		for(int i = 0; i < code_block->codes.size(); i++) {
-			print_indirect_code(code_block->codes[i]);
-		}
-		code_block = code_block->next;
-	} while(code_block->next != NULL);
-	cout << "--------BLOCK--------" << endl;
-	for(int i = 0; i < code_block->codes.size(); i++) {
-		print_indirect_code(code_block->codes[i]);
-	}
+	// do {
+	// 	cout << "--------BLOCK--------" << endl;
+	// 	for(int i = 0; i < tmp->codes.size(); i++) {
+	// 		print_indirect_code(tmp->codes[i]);
+	// 	}
+	// 	tmp = tmp->next;
+	// } while(tmp->next != NULL);
+	// cout << "--------BLOCK--------" << endl;
+	// for(int i = 0; i < tmp->codes.size(); i++) {
+	// 	print_indirect_code(tmp->codes[i]);
+	// }
 }
 
 // INDIRECT CODE
@@ -2151,56 +2085,60 @@ struct indirect_code* newindirect_code(string kw, struct variable* val1, struct 
 	return a;
 }
 
-void print_indirect_code(struct indirect_code* code) {
-	cout << code->kw << "  ";
-	if(code->val1 != NULL) {
-		if(code->val1->label.compare("VAR") == 0) {
-			cout << "[VAL] "<< code->val1->id1;
+void print_indirect_code() {
+	for(int i = 0; i < codes.size(); i++) {
+		struct indirect_code* code = codes.at(i);
+	
+		cout << code->kw << "  ";
+		if(code->val1 != NULL) {
+			if(code->val1->label.compare("VAR") == 0) {
+				cout << "[VAL] "<< code->val1->id1;
 
-		} else if(code->val1->label.compare("REG") == 0) {
-			cout << "[REG] "<< code->val1->id1;
+			} else if(code->val1->label.compare("REG") == 0) {
+				cout << "[REG] "<< code->val1->id1;
 
-		} else if(code->val1->label.compare("ARR") == 0) {
-			cout << "[ARR] "<< code->val1->id1 << "(";
-			if(code->val1->id2.compare("") != 0) {
-				cout << code->val1->id2 << ")";
+			} else if(code->val1->label.compare("ARR") == 0) {
+				cout << "[ARR] "<< code->val1->id1 << "(";
+				if(code->val1->id2.compare("") != 0) {
+					cout << code->val1->id2 << ")";
+				} else {
+					cout << code->val1->number << ")";
+				}
+
+			} else if(code->val1->label.compare("CONST") == 0) {
+				cout << "[CONST] " << code->val1->number;
+			} else if(code->val1->label.compare("ITER") == 0){
+				cout << "[ITER] " << code->val1->id1;
 			} else {
-				cout << code->val1->number << ")";
+				cout << "[LAB] " << code->val1->number;
 			}
-
-		} else if(code->val1->label.compare("CONST") == 0) {
-			cout << "[CONST] " << code->val1->number;
-		} else if(code->val1->label.compare("ITER") == 0){
-			cout << "[ITER] " << code->val1->id1;
-		} else {
-			cout << "[LAB] " << code->val1->number;
 		}
-	}
-	cout << "  ";
-	if(code->val2 != NULL) {
-		if(code->val2->label.compare("VAR") == 0) {
-			cout << "[VAL] "<< code->val2->id1;
+		cout << "  ";
+		if(code->val2 != NULL) {
+			if(code->val2->label.compare("VAR") == 0) {
+				cout << "[VAL] "<< code->val2->id1;
 
-		} else if(code->val2->label.compare("REG") == 0) {
-			cout << "[REG] "<< code->val2->id1;
+			} else if(code->val2->label.compare("REG") == 0) {
+				cout << "[REG] "<< code->val2->id1;
 
-		} else if(code->val2->label.compare("ARR") == 0) {
-			cout << "[ARR] "<< code->val2->id1 << "(";
-			if(code->val2->id2.compare("") != 0) {
-				cout << code->val2->id2 << ")";
+			} else if(code->val2->label.compare("ARR") == 0) {
+				cout << "[ARR] "<< code->val2->id1 << "(";
+				if(code->val2->id2.compare("") != 0) {
+					cout << code->val2->id2 << ")";
+				} else {
+					cout << code->val2->number << ")";
+				}
+
+			} else if(code->val2->label.compare("CONST") == 0) {
+				cout << "[CONST] " << code->val2->number;
+			} else if(code->val2->label.compare("ITER") == 0){ 
+				cout << "[ITER] " << code->val2->id1;
 			} else {
-				cout << code->val2->number << ")";
+				cout << "[LAB] " << code->val2->number;
 			}
-
-		} else if(code->val2->label.compare("CONST") == 0) {
-			cout << "[CONST] " << code->val2->number;
-		} else if(code->val2->label.compare("ITER") == 0){ 
-			cout << "[ITER] " << code->val2->id1;
-		} else {
-			cout << "[LAB] " << code->val2->number;
 		}
+		cout << endl;
 	}
-	cout << endl;
 }
 
 // VARIABLE
@@ -2250,10 +2188,10 @@ void handle_program(struct ast* root_node) {
 		cout << "ERROR! SEMANTIC ANALYSIS" << endl;
 		return;
 	}
-	struct block* b = handle_commands(root_node->s_2);
+	handle_commands(root_node->s_2);
 
-	// print_blocks(b);
-	gen_assembler(b);
+	print_indirect_code();
+	gen_assembler();
 	
 }
 
@@ -2303,15 +2241,12 @@ void declare_variables(struct ast* declarations) {
 	while(ptr != NULL) {
 		if(ptr->value.compare("dec_var") == 0) { // variable
 			mem_id--;
-			// cout << "DECLARE VAR : " << ptr->s_2->value << "  idx:" << mem_id << endl;
 			vars[ptr->s_2->value] = mem_id;
-			cout << "VAR " << ptr->s_2->value << ": " << mem_id << endl;
 
 		} else { // array
 					mem_id -= (ptr->s_4->number - ptr->s_3->number + 1);
 					struct arr* arr_obj = newarray(ptr->s_2->value, ptr->s_3->number, ptr->s_4->number, mem_id);
 					arrays[ptr->s_2->value] = arr_obj;
-					cout << "ARR " << ptr->s_2->value << ": " << mem_id << endl;
 
 		}
 
@@ -2320,51 +2255,45 @@ void declare_variables(struct ast* declarations) {
 }
 
 
-
-
 // TLUMACZENIA NA ASSEMBLER
 
-void gen_assembler(struct block* root) {
-	struct block* ptr = root;
-	while(ptr != NULL) {
+void gen_assembler() {
 
-		for(int i = 0; i < ptr->codes.size(); i++) {
-			struct indirect_code* code = (ptr->codes.at(i));
-			// instructs.push_back("INSTR: " + code->kw + "\n");
-			if(code->kw.compare("@LOAD") == 0) {
-				gen_load(code);
-			} else if(code->kw.compare("@STORE") == 0) {
-				gen_store(code);
-			} else if(code->kw.compare("SUB") == 0) {
-				gen_sub(code);
-			} else if(code->kw.compare("ADD") == 0) {
-				gen_add(code);
-			} else if(code->kw.compare("DEC") == 0) {
-				gen_dec(code);
-			} else if(code->kw.compare("INC") == 0) {
-				gen_inc(code);
-			} else if(code->kw.compare("@LABEL") == 0) {
-				gen_label(code);
-			} else if(code->kw.compare("@JZERO") == 0) {
-				gen_jzero(code);
-			} else if(code->kw.compare("@JUMP") == 0) {
-				gen_jump(code);
-			} else if(code->kw.compare("@COPY") == 0) {
-				gen_copy(code);
-			} else if(code->kw.compare("@GET") == 0) {
-				gen_get(code);
-			} else if(code->kw.compare("@PUT") == 0) {
-				gen_put(code);
-			} else if(code->kw.compare("@HALF") == 0) {
-				gen_half(code);
-			} else if(code->kw.compare("@JODD") == 0) {
-				gen_jodd(code);
-			}
-
+	for(int i = 0; i < codes.size(); i++) {
+		struct indirect_code* code = codes.at(i);
+		// instructs.push_back("INSTR: " + code->kw + "\n");
+		if(code->kw.compare("@LOAD") == 0) {
+			gen_load(code);
+		} else if(code->kw.compare("@STORE") == 0) {
+			gen_store(code);
+		} else if(code->kw.compare("SUB") == 0) {
+			gen_sub(code);
+		} else if(code->kw.compare("ADD") == 0) {
+			gen_add(code);
+		} else if(code->kw.compare("DEC") == 0) {
+			gen_dec(code);
+		} else if(code->kw.compare("INC") == 0) {
+			gen_inc(code);
+		} else if(code->kw.compare("@LABEL") == 0) {
+			gen_label(code);
+		} else if(code->kw.compare("@JZERO") == 0) {
+			gen_jzero(code);
+		} else if(code->kw.compare("@JUMP") == 0) {
+			gen_jump(code);
+		} else if(code->kw.compare("@COPY") == 0) {
+			gen_copy(code);
+		} else if(code->kw.compare("@GET") == 0) {
+			gen_get(code);
+		} else if(code->kw.compare("@PUT") == 0) {
+			gen_put(code);
+		} else if(code->kw.compare("@HALF") == 0) {
+			gen_half(code);
+		} else if(code->kw.compare("@JODD") == 0) {
+			gen_jodd(code);
 		}
-		ptr = ptr->next;
-	}
 
+	}
+	
 	for(int i=0; i<instructs.size(); i++) {
 		if(instructs[i].length() < 5) {
 			outfile << jumps[instructs[i]] << labels[instructs[i]] << "    #" << i << endl;
@@ -2372,7 +2301,7 @@ void gen_assembler(struct block* root) {
 			outfile << instructs[i] << "    #" << i << endl;
 		}
 	}
-	outfile << "HALT" << endl;
+	outfile << "HALT" << "    #" << instructs.size() << endl;
 }
 
 void gen_get(struct indirect_code* code) {
@@ -2391,40 +2320,26 @@ void gen_copy(struct indirect_code* code) {
 }
 
 void gen_jump(struct indirect_code* code) {
-	// if(labels.find(code->val1->number) != labels.end()) {
-		jumps[to_string(code->val1->number)] = "JUMP ";
-		instructs.push_back(to_string(code->val1->number));
-		linoleo++;
-	// } else {
-
-	// }
+	jumps[to_string(code->val1->number)] = "JUMP ";
+	instructs.push_back(to_string(code->val1->number));
+	linoleo++;
 }
 
 void gen_jzero(struct indirect_code* code) {
-	// if(labels.find(code->val2->number) != labels.end()) {
-		jumps[to_string(code->val2->number)] = "JZERO " + code->val1->id1 + " ";
-		instructs.push_back(to_string(code->val2->number));
-		linoleo++;
-	// } else {
-		
-	// }
+	jumps[to_string(code->val2->number)] = "JZERO " + code->val1->id1 + " ";
+	instructs.push_back(to_string(code->val2->number));
+	linoleo++;
 }
 
 void gen_jodd(struct indirect_code* code) {
-	// if(labels.find(code->val2->number) != labels.end()) {
-		jumps[to_string(code->val2->number)] = "JODD " + code->val1->id1 + " ";
-		instructs.push_back(to_string(code->val2->number));
-		linoleo++;
-	// } else {
-		
-	// }
+	jumps[to_string(code->val2->number)] = "JODD " + code->val1->id1 + " ";
+	instructs.push_back(to_string(code->val2->number));
+	linoleo++;
 }
 
 void gen_half(struct indirect_code* code) {
 	instructs.push_back("HALF " + code->val1->id1);
 	linoleo++;
-		
-	// }
 }
 
 void gen_label(struct indirect_code* code) {
@@ -2453,7 +2368,6 @@ void gen_add(struct indirect_code* code) {
 
 void gen_store(struct indirect_code* code) {
 	int idx = 0;
-	// cout << code->val2->label << endl;
 	if(code->val2->label.compare("VAR") == 0 || code->val2->label.compare("ITER") == 0) {
 		idx = vars[code->val2->id1];
 		gen_const("A", idx);
@@ -2468,15 +2382,22 @@ void gen_store(struct indirect_code* code) {
 			gen_const("A", a_idx);
 			instructs.push_back("LOAD A");
 			linoleo++;
-			gen_const("H", a->mem_idx);
-			instructs.push_back("ADD A H");
-			linoleo++;
-			gen_const("H", a->from);
-			instructs.push_back("SUB A H");
-			linoleo++;
-			// cout << " A_idx: " << a_idx << " MEM_idx: " << a->mem_idx << " FROM: " << a->from << endl;
+			if(a->mem_idx > a->from) {
+				gen_const("H", a->mem_idx - a->from);
+				instructs.push_back("ADD A H");
+				linoleo++;	
+			} else {
+				gen_const("H", a->from - a->mem_idx);
+				instructs.push_back("SUB A H");
+				linoleo++;
+			}
+			// gen_const("H", a->mem_idx);
+			// instructs.push_back("ADD A H");
+			// linoleo++;
+			// gen_const("H", a->from);
+			// instructs.push_back("SUB A H");
+			// linoleo++;
 		}
-		// idx = a_idx - a->from;
 
 	} else {
 		// gen_const(code->val1->id1, code->val2->number);
@@ -2488,37 +2409,41 @@ void gen_store(struct indirect_code* code) {
 
 void gen_load(struct indirect_code* code) {
 	int idx = 0;
-	// cout << code->val1->label << endl;
 	if(code->val1->label.compare("VAR") == 0 || code->val1->label.compare("ITER") == 0) {
 		idx = vars[code->val1->id1];
-		// cout << "VAR " << code->val1->id1 << "  idx: " << vars[code->val1->id1] << endl; 
 		gen_const("A", idx);
 
 	} else if(code->val1->label.compare("ARR") == 0){
-		// cout << "ARRAY" << endl;
 		struct arr* a = arrays[code->val1->id1];
 		if(code->val1->id2.compare("") == 0) {
 			idx = code->val1->number - a->from + a->mem_idx;
-			// cout << "IDX: " << idx << endl;
 			gen_const("A", idx);
 		} else {
 			int a_idx = vars[code->val1->id2];
 			gen_const("A", a_idx);
 			instructs.push_back("LOAD A");
 			linoleo++;
-			gen_const("H", a->mem_idx);
-			instructs.push_back("ADD A H");
-			linoleo++;
-			gen_const("H", a->from);
-			instructs.push_back("SUB A H");
-			linoleo++;
+			if(a->mem_idx > a->from) {
+				gen_const("H", a->mem_idx - a->from);
+				instructs.push_back("ADD A H");
+				linoleo++;
+			} else {
+				gen_const("H", a->from - a->mem_idx);
+				instructs.push_back("SUB A H");
+				linoleo++;	
+			}
+			// gen_const("H", a->mem_idx);
+			// instructs.push_back("ADD A H");
+			// linoleo++;
+			// gen_const("H", a->from);
+			// instructs.push_back("SUB A H");
+			// linoleo++;
 		}
-		// idx = a_idx - a->from;
 
 	} else {
 		gen_const(code->val2->id1, code->val1->number);
-		// cout << "LOAD ELSE" << code->val1->id1 << endl;
 		return;
+
 	}
 	instructs.push_back("LOAD " + code->val2->id1);
 	linoleo++;
@@ -2526,154 +2451,78 @@ void gen_load(struct indirect_code* code) {
 
 void gen_const(string reg, int val) {
 	vector<string> queue;
-	// linoleo++;
 
 	while(val > 0) {
 		if(val % 2 == 0) {
 			val = val / 2;
 			queue.push_back("ADD " + reg + " " + reg);
-			// linoleo++;
 		} else {
 			val--;
 			queue.push_back("INC " + reg);
-			// linoleo ++;
 		}
 	}
 	queue.push_back("SUB " + reg + " " + reg);
-	// linoleo++;
 
-	// cout << queue.size() << endl;
 	for(int i=queue.size()-1 ; i >= 0; i--) {
 		instructs.push_back(queue[i]);
 		linoleo++;
 	}
-
-
-	// int i = 1;
-	// cout << "SUB " << reg << " " << reg << endl;
-	// cout << "INC " << reg << endl;
-	// while(2*i < val) {
-	// 	cout << "ADD " << reg << " " << reg << endl;
-	// 	i += i;
-	// }
-	// while(i < val) {
-	// 	cout << "INC " << reg << endl;
-	// 	i++;
-	// }
 }
 
 
 
-struct block* handle_commands(struct ast* commands_node) {
-	struct block* tmp = NULL;
-	struct block* code_block = NULL;
+void handle_commands(struct ast* commands_node) {
 
 	if(commands_node->s_2 != NULL) {
-		tmp = handle_command(commands_node->s_2);
-		code_block = handle_commands(commands_node->s_1);
+		handle_commands(commands_node->s_1);
+		handle_command(commands_node->s_2);
 	} else {
-		tmp = handle_command(commands_node->s_1);
-	}
-
-	if(code_block != NULL) {
-		struct block* ptr = code_block;
-		while(ptr->next != NULL) {
-			ptr = ptr->next;
-		}
-		ptr->next = tmp;
-		tmp->prev = code_block;
-		return code_block;
-	} else {
-		return tmp;
+		handle_command(commands_node->s_1);
 	}
 }
 
 
-// ################ DONE ####################
-// struct block* handle_commands(struct ast* commands_node) {
-// 	// MOZE DO POPRAWY? SAM NIE WIEM
-// 	// BUDUJE SIE OD OSTATNIEJ INSTRUKCJI
-// 	struct block* code_block = newblock();
-// 	if(commands_node == NULL) { // teoretycznie niepotrzebne
-// 		// PUSTE COMMANDS
-// 		cout << "NULL" << endl;
-// 		return code_block;
-// 	}
-
-// 	while(commands_node->s_2 != NULL) {
-// 		struct block* tmp = handle_command(commands_node->s_2);
-// 		// while(tmp->next != NULL) {
-// 		// 	tmp = tmp->next;
-// 		// }
-// 		while(code_block->prev != NULL) {
-// 			code_block = code_block->prev;
-// 		}
-// 		code_block->prev = tmp;
-// 		tmp->next = code_block;
-
-// 		commands_node = commands_node->s_1;
-// 		// code_block = code_block->prev;
-
-// 	}
-// 	while(code_block->prev != NULL) {
-// 		code_block = code_block->prev;
-// 	}
-	
-// 	struct block* tmp = handle_command(commands_node->s_1);
-// 	code_block->prev = tmp;
-// 	tmp->next = code_block;
-
-// 	while(code_block->next != NULL) {
-// 		code_block = code_block->next;
-// 	}
-
-// 	return code_block;
-// }
-
-// ################## DONE ##################
-struct block* handle_command(struct ast* command_node) {
-	struct block* code_block = newblock();
+void handle_command(struct ast* command_node) {
 	if(command_node->value.compare(":=") == 0) {
 		// ASSIGN
-		code_block = handle_assign(command_node);
-		return code_block;
+		handle_assign(command_node);
+
 	} else if(command_node->value.compare("if_else") == 0) {
 		// IF ... THEN ... ELSE ... ENDIF
-		code_block = handle_if_else(command_node);
-		return code_block;
+		handle_if_else(command_node);
+
 	} else if(command_node->value.compare("if") == 0) {
 		// IF ... THEN ... ENDIF
-		code_block = handle_if(command_node);
-		return code_block;
+		handle_if(command_node);
+
 	} else if(command_node->value.compare("while") == 0) {
 		// WHILE ... DO ... ENDWHILE
-		code_block = handle_while(command_node);
-		return code_block;
+		handle_while(command_node);
+
 	} else if(command_node->value.compare("do_while") == 0) {
 		// DO ... WHILE ... ENDDO
-		code_block = handle_do_while(command_node);
-		return code_block;
+		handle_do_while(command_node);
+
 	} else if(command_node->value.compare("for_to") == 0) {
 		// FOR ID FROM ... TO ... DO ... ENDFOR
-		code_block = handle_for_to(command_node);
-		return code_block;
+		handle_for_to(command_node);
+
 	} else if(command_node->value.compare("for_downto") == 0) {
 		// FOR ID FROM ... DOWNTO ... DO ... ENDFOR
-		code_block = handle_for_downto(command_node);
-		return code_block;
+		handle_for_downto(command_node);
+
 	} else if(command_node->value.compare("read") == 0) {
 		// READ ...
-		code_block =  handle_read(command_node);
-		return code_block;
+		handle_read(command_node);
+
 	} else {
 		// WRITE ...
-		code_block = handle_write(command_node);
-		return code_block;
+		handle_write(command_node);
+
 	}
-	return newblock();
 }
 
-void handle_condition(struct ast* condition_node, struct variable* end_label, vector<struct indirect_code*>* vec) { 
+void handle_condition(struct ast* condition_node, struct variable* end_label) { 
 
 	if(condition_node->value.compare(">") == 0) {
 		struct ast* tmp = condition_node->s_1;
@@ -2685,84 +2534,71 @@ void handle_condition(struct ast* condition_node, struct variable* end_label, ve
 		condition_node->s_1 = condition_node->s_2;
 		condition_node->s_2 = tmp;
 		condition_node->value = "<=";
-	} else {
-		// condition->codes.push_back(handle_value(condition_node->s_1) + condition_node->value + handle_value(s_2));
-	}
-
-	// condition->codes.push_back(handle_value(condition_node->s_1) + condition_node->value + handle_value(s_2));
+	} else {	}
 	
 	if(condition_node->value.compare("<") == 0) {
-		_handle_lt(condition_node, end_label, vec);
+		_handle_lt(condition_node, end_label);
 	} else if(condition_node->value.compare("<=") == 0) {
-		_handle_lte(condition_node, end_label, vec);
+		_handle_lte(condition_node, end_label);
 	} else if(condition_node->value.compare("=") == 0) {
-		_handle_eq(condition_node, end_label, vec);
+		_handle_eq(condition_node, end_label);
 	} else if(condition_node->value.compare("!=") == 0) {
-		_handle_neq(condition_node, end_label, vec);
+		_handle_neq(condition_node, end_label);
 	} else {
 
 	}
 }
 
-// \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
-// ########## <, <=, =, != ###################
-void _handle_lt(struct ast* condition_node, struct variable* end_label, vector<struct indirect_code*>* vec) {
-	// string reg_gen = use_register();
+
+void _handle_lt(struct ast* condition_node, struct variable* end_label) {
 	struct variable* reg_B = newvariable("REG", "B", "", 0);
 	struct variable* reg_C = newvariable("REG", "C", "", 0);
 	
-	struct indirect_code* a = handle_value(condition_node->s_1, "B");
-	struct indirect_code* b = handle_value(condition_node->s_2, "C");
-	(*vec).push_back(a);
-	(*vec).push_back(b);
+	handle_value(condition_node->s_1, "B");
+	handle_value(condition_node->s_2, "C");
 
 	// b - a
 	struct indirect_code* sub = newindirect_code("SUB", reg_C, reg_B);
-	(*vec).push_back(sub);
+	codes.push_back(sub);
 	// JUMP -> @END
 	struct indirect_code* jzero = newindirect_code("@JZERO", reg_C, end_label);
-	(*vec).push_back(jzero);
+	codes.push_back(jzero);
 }
 
-void _handle_lte(struct ast* condition_node, struct variable* end_label, vector<struct indirect_code*>* vec) {
+void _handle_lte(struct ast* condition_node, struct variable* end_label) {
 	struct variable* reg_B = newvariable("REG", "B", "", 0);
 	struct variable* reg_C = newvariable("REG", "C", "", 0);
 	
-	struct indirect_code* a = handle_value(condition_node->s_1, "B");
-	struct indirect_code* b = handle_value(condition_node->s_2, "C");
-	(*vec).push_back(a);
-	(*vec).push_back(b);
+	handle_value(condition_node->s_1, "B");
+	handle_value(condition_node->s_2, "C");
 
 	struct variable* lab = get_next_label_id();
 
 	// a - b
 	struct indirect_code* sub = newindirect_code("SUB", reg_B, reg_C);
-	(*vec).push_back(sub);
+	codes.push_back(sub);
 	// JZERO -> (+2)
 	struct indirect_code* jzero = newindirect_code("@JZERO", reg_B, lab);
-	// print_indirect_code(jzero);
-	(*vec).push_back(jzero);
+	codes.push_back(jzero);
 	// JUMP -> @END
 	struct indirect_code* jump = newindirect_code("@JUMP", end_label, NULL);
-	(*vec).push_back(jump);
+	codes.push_back(jump);
 	// LABEL (+2)
 	struct indirect_code* label = newindirect_code("@LABEL", lab, NULL);
-	(*vec).push_back(label);
+	codes.push_back(label);
 }
 
-void _handle_eq(struct ast* condition_node, struct variable* end_label, vector<struct indirect_code*>* vec) {
+void _handle_eq(struct ast* condition_node, struct variable* end_label) {
 	struct variable* reg_B = newvariable("REG", "B", "", 0);
 	struct variable* reg_C = newvariable("REG", "C", "", 0);
 	struct variable* reg_D = newvariable("REG", "D", "", 0);
 
-	struct indirect_code* a = handle_value(condition_node->s_1, "B");
-	struct indirect_code* b = handle_value(condition_node->s_2, "C");
-	(*vec).push_back(a);
-	(*vec).push_back(b);
+	handle_value(condition_node->s_1, "B");
+	handle_value(condition_node->s_2, "C");
 
 	// COPY a
 	struct indirect_code* copy_a = newindirect_code("@COPY", reg_D, reg_B);
-	(*vec).push_back(copy_a);
+	codes.push_back(copy_a);
 
 	struct variable* lab1 = get_next_label_id();
 	struct variable* lab2 = get_next_label_id();
@@ -2770,337 +2606,287 @@ void _handle_eq(struct ast* condition_node, struct variable* end_label, vector<s
 
 	// a - b
 	struct indirect_code* sub = newindirect_code("SUB", reg_B, reg_C);
-	(*vec).push_back(sub);
+	codes.push_back(sub);
 	// JZERO -> (+2)
 	struct indirect_code* jzero = newindirect_code("@JZERO", reg_B, lab1);
-	(*vec).push_back(jzero);
+	codes.push_back(jzero);
 	// JUMP -> @END
 	struct indirect_code* jump = newindirect_code("@JUMP", end_label, NULL);
-	(*vec).push_back(jump);
+	codes.push_back(jump);
 	// LABEL (+2)
 	struct indirect_code* label = newindirect_code("@LABEL", lab1, NULL);
-	(*vec).push_back(label);
+	codes.push_back(label);
 
 	// b - a
 	sub = newindirect_code("SUB", reg_C, reg_D);
-	(*vec).push_back(sub);
+	codes.push_back(sub);
 	// JZERO -> (+2)
 	jzero = newindirect_code("@JZERO", reg_C, lab2);
-	(*vec).push_back(jzero);
+	codes.push_back(jzero);
 	// JUMP -> @END
 	jump = newindirect_code("@JUMP", end_label, NULL);
-	(*vec).push_back(jump);
+	codes.push_back(jump);
 	label = newindirect_code("@LABEL", lab2, NULL);
-	(*vec).push_back(label);
+	codes.push_back(label);
 }
 
-void _handle_neq(struct ast* condition_node, struct variable* end_label, vector<struct indirect_code*>* vec) {
+void _handle_neq(struct ast* condition_node, struct variable* end_label) {
 	struct variable* reg_B = newvariable("REG", "B", "", 0);
 	struct variable* reg_C = newvariable("REG", "C", "", 0);
 	struct variable* reg_D = newvariable("REG", "D", "", 0);
 
-	struct indirect_code* a = handle_value(condition_node->s_1, "B");
-	struct indirect_code* b = handle_value(condition_node->s_2, "C");
-	(*vec).push_back(a);
-	(*vec).push_back(b);
+	handle_value(condition_node->s_1, "B");
+	handle_value(condition_node->s_2, "C");
 
 	// COPY a
 	struct indirect_code* copy_a = newindirect_code("@COPY", reg_D, reg_B);
-	(*vec).push_back(copy_a);
+	codes.push_back(copy_a);
 
 	struct variable* lab1 = get_next_label_id();
 	struct variable* lab2 = get_next_label_id();
 
 	// a - b
 	struct indirect_code* sub = newindirect_code("SUB", reg_B, reg_C);
-	(*vec).push_back(sub);
+	codes.push_back(sub);
 	// JZERO -> (+2)
 	struct indirect_code* jzero = newindirect_code("@JZERO", reg_B, lab1);
-	(*vec).push_back(jzero);
+	codes.push_back(jzero);
 	// JUMP -> @lab2
 	struct indirect_code* jump = newindirect_code("@JUMP", lab2, NULL);
-	(*vec).push_back(jump);
+	codes.push_back(jump);
 	// LABEL (+2)
 	struct indirect_code* label = newindirect_code("@LABEL", lab1, NULL);
-	(*vec).push_back(label);
+	codes.push_back(label);
 
 	// b - a
 	sub = newindirect_code("SUB", reg_C, reg_D);
-	(*vec).push_back(sub);
+	codes.push_back(sub);
 	// JZERO -> @END
 	jzero = newindirect_code("@JZERO", reg_C, end_label);
-	(*vec).push_back(jzero);
+	codes.push_back(jzero);
 	// LABEL @lab2
 	label = newindirect_code("@LABEL", lab2, NULL);
-	(*vec).push_back(label);
+	codes.push_back(label);
 }
-// \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
 
 
-// ###################### DONE ################
-struct block* handle_if(struct ast* if_node) {
+void handle_if(struct ast* if_node) {
 	struct variable* end_label = get_next_label_id();
 
-	struct block* condition_block = newblock();
-	handle_condition(if_node->s_1, end_label, &(condition_block->codes));
+	handle_condition(if_node->s_1, end_label);
 	
-	struct block* commands_block = handle_commands(if_node->s_2);
+	handle_commands(if_node->s_2);
 
-	commands_block->prev = condition_block;
-	condition_block->next = commands_block;
-
-	struct block* tmp = condition_block;
-	while(tmp->next != NULL) {
-		tmp = tmp->next;
-	}
 	struct indirect_code* lab = newindirect_code("@LABEL", end_label, NULL);
-	tmp->codes.push_back(lab);
+	codes.push_back(lab);
 
-	return condition_block;
 }
 
-// ###################### DONE ###################
-struct block* handle_if_else(struct ast* if_else_node) {
+
+void handle_if_else(struct ast* if_else_node) {
 	struct variable* else_label = get_next_label_id();
+	struct variable* end_label = get_next_label_id();
 
-	struct block* condition_block = newblock();
-	handle_condition(if_else_node->s_1, else_label, &(condition_block->codes));
+	handle_condition(if_else_node->s_1, else_label);
 	
-	struct block* if_commands_block = handle_commands(if_else_node->s_2);
-	struct block* else_commands_block = handle_commands(if_else_node->s_3);
+	handle_commands(if_else_node->s_2);
+	struct indirect_code* else_lab_code = newindirect_code("@LABEL", else_label, NULL);
+	codes.push_back(newindirect_code("@JUMP", end_label, NULL));
 
-	if_commands_block->prev = condition_block;
-	condition_block->next = if_commands_block;
+	codes.push_back(else_lab_code);
+	handle_commands(if_else_node->s_3);
+	struct indirect_code* end_lab_code = newindirect_code("@LABEL", end_label, NULL);
+	codes.push_back(end_lab_code);
 
-	struct block* tmp = condition_block;
-	while(tmp->next != NULL) {
-		tmp = tmp->next;
-	}
-	struct indirect_code* lab = newindirect_code("@LABEL", else_label, NULL);
-	tmp->codes.push_back(lab);
-
-	else_commands_block->prev = tmp;
-	tmp->next = else_commands_block;
-
-	return condition_block;
 }
 
-struct block* handle_while(struct ast* while_node) {
+void handle_while(struct ast* while_node) {
 	struct variable* end_label = get_next_label_id();
 	struct variable* loop_label = get_next_label_id();
 
-	struct block* condition_block = newblock();
 	struct indirect_code* lab_loop = newindirect_code("@LABEL", loop_label, NULL);
-	condition_block->codes.push_back(lab_loop);
+	codes.push_back(lab_loop);
 
-	handle_condition(while_node->s_1, end_label, &(condition_block->codes));
+	handle_condition(while_node->s_1, end_label);
 	
-	struct block* commands_block = handle_commands(while_node->s_2);
+	handle_commands(while_node->s_2);
 
-	condition_block->next = commands_block;
-	commands_block->prev = condition_block;
-
-	struct block* tmp = commands_block;
-	while(tmp->next != NULL) {
-		tmp = tmp->next;
-	}
 	struct indirect_code* jump = newindirect_code("@JUMP", loop_label, NULL);
-	tmp->codes.push_back(jump);
+	codes.push_back(jump);
 	struct indirect_code* lab_end = newindirect_code("@LABEL", end_label, NULL);
-	tmp->codes.push_back(lab_end);
+	codes.push_back(lab_end);
 
-	return condition_block;
 }
 
-struct block* handle_do_while(struct ast* do_while_node) {
+void handle_do_while(struct ast* do_while_node) {
 	struct variable* end_label = get_next_label_id();
 	struct variable* loop_label = get_next_label_id();
 
-	struct block* condition_block = newblock();
-	handle_condition(do_while_node->s_2, end_label, &(condition_block->codes));
-	
-	struct block* commands_block = handle_commands(do_while_node->s_1);
+	handle_condition(do_while_node->s_2, end_label);
 	
 	struct indirect_code* lab_loop = newindirect_code("@LABEL", loop_label, NULL);
-	vector<struct indirect_code*>::iterator it;
-	it = commands_block->codes.begin();
-	commands_block->codes.insert(it, lab_loop);
-
-	struct block* tmp = commands_block;
-	while(tmp->next != NULL) {
-		tmp = tmp->next;
-	}
-
-	tmp->next = condition_block;
-	condition_block->prev = tmp;
-
+	codes.push_back(lab_loop);
+	handle_commands(do_while_node->s_1);
+	
 	struct indirect_code* jump = newindirect_code("@JUMP", loop_label, NULL);
-	condition_block->codes.push_back(jump);
+	codes.push_back(jump);
 	struct indirect_code* lab_end = newindirect_code("@LABEL", end_label, NULL);
-	condition_block->codes.push_back(lab_end);
+	codes.push_back(lab_end);
 
-	return commands_block;
 }
 
-struct block* handle_for_to(struct ast* for_to_node) {
+void handle_for_to(struct ast* for_to_node) {
+	// struct indirect_code* tmp_struct;
 	struct variable* end_label = get_next_label_id();
 	struct variable* label_0 = get_next_label_id();
 	struct variable* loop_label = get_next_label_id();
 
-	struct block* iter_block = get_next_iter(for_to_node->s_1, for_to_node->s_2);
-	
-	struct indirect_code* lab_loop = newindirect_code("@LABEL", loop_label, NULL);
-	iter_block->codes.push_back(lab_loop);
-
-	// CONDITION
-	struct block* condition_block = newblock();
 	struct variable* reg_B = newvariable("REG", "B", "", 0);
 	struct variable* reg_C = newvariable("REG", "C", "", 0);
-	struct variable* iterator = newvariable("ITER", for_to_node->s_1->value, "", 0);
-	
-	struct indirect_code* load_iter = newindirect_code("@LOAD", iterator, reg_B);
-	struct indirect_code* b = handle_value(for_to_node->s_3, "C");
+	struct variable* reg_D = newvariable("REG", "D", "", 0);
 
-	condition_block->codes.push_back(load_iter);
-	condition_block->codes.push_back(b);
 
-	// @iter - b (<=)
-	struct indirect_code* sub = newindirect_code("SUB", reg_B, reg_C);
-	condition_block->codes.push_back(sub);
-	// JUMP -> @END
-	struct indirect_code* jzero = newindirect_code("@JZERO", reg_B, label_0);
-	condition_block->codes.push_back(jzero);
-
+	handle_value(for_to_node->s_2, "B");
+	handle_value(for_to_node->s_3, "C");
+	struct indirect_code* sub_b_c = newindirect_code("SUB", reg_B, reg_C);
+	codes.push_back(sub_b_c); // a - b
+	struct indirect_code* jzero_b_0 = newindirect_code("@JZERO", reg_B, label_0);
+	codes.push_back(jzero_b_0); // JZERO +2
 	struct indirect_code* jump_end = newindirect_code("@JUMP", end_label, NULL);
-	condition_block->codes.push_back(jump_end);
-
+	codes.push_back(jump_end); // JUMP END_LOOP
 	struct indirect_code* label_0_code = newindirect_code("@LABEL", label_0, NULL);
-	condition_block->codes.push_back(label_0_code);
+	codes.push_back(label_0_code); // LABEL 0
 
-	iter_block->next = condition_block;
-	condition_block->prev = iter_block;
+	// INICJALIZACJA PETLI
+	get_next_iter(for_to_node->s_1, for_to_node->s_2); // i := a
 
-	// COMMANDS
-	struct block* commands_block = handle_commands(for_to_node->s_4);
+	// wartosc b jest caly czas w reg C
+	// ZAPIS b do pamiecicondition_block_1->next = iter_block;
+	vars[for_to_node->s_1->value + "_END"] = iterator_id;
+	iterator_id++;
+	struct variable* iterator_end = newvariable("ITER", for_to_node->s_1->value + "_END", "", 0);
+	codes.push_back(newindirect_code("@STORE", reg_C, iterator_end));
+	// labelka - poczatek petli
+	struct indirect_code* lab_loop = newindirect_code("@LABEL", loop_label, NULL);
+	codes.push_back(lab_loop);
 
-	condition_block->next = commands_block;
-	commands_block->prev = condition_block;
+	// COMMANDS BLOCK
+	handle_commands(for_to_node->s_4);
+
+
+	struct variable* iterator = newvariable("ITER", for_to_node->s_1->value, "", 0);
+
+	codes.push_back(newindirect_code("@LOAD", iterator, reg_B)); // LOAD ITERATOR
+	codes.push_back(newindirect_code("@LOAD", iterator_end, reg_C));
+	codes.push_back(newindirect_code("@COPY", reg_D, reg_B));
+	struct variable* lab1 = get_next_label_id();
+	struct variable* lab2 = get_next_label_id();
+	codes.push_back(newindirect_code("SUB", reg_B, reg_C)); // iter - iter_end
+	codes.push_back(newindirect_code("@JZERO", reg_B, lab1)); // JZERO +2
+	codes.push_back(newindirect_code("@JUMP", lab2, NULL)); // JUMP loop
+	codes.push_back(newindirect_code("@LABEL", lab1, NULL));
+	codes.push_back(newindirect_code("SUB", reg_C, reg_D)); // iter_end - iter
+	codes.push_back(newindirect_code("@JZERO", reg_C, end_label)); // jump end
+	codes.push_back(newindirect_code("@LABEL", lab2, NULL));
+	codes.push_back(newindirect_code("INC", reg_D, NULL)); // ITERATOR++
+	codes.push_back(newindirect_code("@STORE", reg_D, iterator));
+	codes.push_back(newindirect_code("@JUMP", loop_label, NULL));
+	codes.push_back(newindirect_code("@LABEL", end_label, NULL));
 	
-	struct block* tmp = commands_block;
-	while(tmp->next != NULL) {
-		tmp = tmp->next;
-	}
-
-	tmp->codes.push_back(load_iter);
-	struct indirect_code* inc = newindirect_code("INC", reg_B, NULL);
-	tmp->codes.push_back(inc);
-	struct indirect_code* store_iter = newindirect_code("@STORE", reg_B, iterator);
-	tmp->codes.push_back(store_iter);
-	struct indirect_code* jump = newindirect_code("@JUMP", loop_label, NULL);
-	tmp->codes.push_back(jump);
-	struct indirect_code* lab_end = newindirect_code("@LABEL", end_label, NULL);
-	tmp->codes.push_back(lab_end);
-
-	return iter_block;
 }
 
-struct block* handle_for_downto(struct ast* for_to_node) {
+void handle_for_downto(struct ast* for_to_node) {
 	struct variable* end_label = get_next_label_id();
+	struct variable* end_label1 = get_next_label_id();
 	struct variable* label_0 = get_next_label_id();
 	struct variable* loop_label = get_next_label_id();
 
-	struct block* iter_block = get_next_iter(for_to_node->s_1, for_to_node->s_2);
-	
-	struct indirect_code* lab_loop = newindirect_code("@LABEL", loop_label, NULL);
-	iter_block->codes.push_back(lab_loop);
-
-	// CONDITION
-	struct block* condition_block = newblock();
 	struct variable* reg_B = newvariable("REG", "B", "", 0);
 	struct variable* reg_C = newvariable("REG", "C", "", 0);
-	struct variable* iterator = newvariable("ITER", for_to_node->s_1->value, "", 0);
-	
-	struct indirect_code* load_iter = newindirect_code("@LOAD", iterator, reg_B);
-	struct indirect_code* b = handle_value(for_to_node->s_3, "C");
+	struct variable* reg_D = newvariable("REG", "D", "", 0);
 
-	condition_block->codes.push_back(load_iter);
-	condition_block->codes.push_back(b);
 
-	// TU MOZE BYC BLAD
-	// b - @iter (>=)
-	struct indirect_code* sub = newindirect_code("SUB", reg_C, reg_B);
-	condition_block->codes.push_back(sub);
-	// JUMP -> @END
-	struct indirect_code* jzero = newindirect_code("@JZERO", reg_C, label_0);
-	condition_block->codes.push_back(jzero);
-
-	struct indirect_code* jump_end = newindirect_code("@JUMP", end_label, NULL);
-	condition_block->codes.push_back(jump_end);
-
+	handle_value(for_to_node->s_2, "B");
+	handle_value(for_to_node->s_3, "C");
+	codes.push_back(newindirect_code("@COPY", reg_D, reg_C));
+	struct indirect_code* sub_b_c = newindirect_code("SUB", reg_C, reg_B);
+	codes.push_back(sub_b_c); // b - a
+	struct indirect_code* jzero_c_0 = newindirect_code("@JZERO", reg_C, label_0);
+	codes.push_back(jzero_c_0); // JZERO +2
+	struct indirect_code* jump_end = newindirect_code("@JUMP", end_label1, NULL);
+	codes.push_back(jump_end); // JUMP END_LOOP
 	struct indirect_code* label_0_code = newindirect_code("@LABEL", label_0, NULL);
-	condition_block->codes.push_back(label_0_code);
+	codes.push_back(label_0_code); // LABEL 0
 
-	iter_block->next = condition_block;
-	condition_block->prev = iter_block;
+	// INICJALIZACJA PETLI
+	get_next_iter(for_to_node->s_1, for_to_node->s_2); // i := a
 
-	// COMMANDS
-	struct block* commands_block = handle_commands(for_to_node->s_4);
+	// wartosc b jest caly czas w reg D
+	// ZAPIS b do pamiecicondition_block_1->next = iter_block;
+	vars[for_to_node->s_1->value + "_END"] = iterator_id;
+	iterator_id++;
+	struct variable* iterator_end = newvariable("ITER", for_to_node->s_1->value + "_END", "", 0);
+	codes.push_back(newindirect_code("@STORE", reg_D, iterator_end));
+	// labelka - poczatek petli
+	struct indirect_code* lab_loop = newindirect_code("@LABEL", loop_label, NULL);
+	codes.push_back(lab_loop);
 
-	condition_block->next = commands_block;
-	commands_block->prev = condition_block;
+	// COMMANDS BLOCK
+	handle_commands(for_to_node->s_4);
+
+
+	struct variable* iterator = newvariable("ITER", for_to_node->s_1->value, "", 0);
+
+	codes.push_back(newindirect_code("@LOAD", iterator, reg_B)); // LOAD ITERATOR
 	
-	struct block* tmp = commands_block;
-	while(tmp->next != NULL) {
-		tmp = tmp->next;
-	}
+	// ITERATOR caly czas w rejestrze B i D
+	// CONDITION while
+	struct variable* lab1 = get_next_label_id();
+	struct variable* lab2 = get_next_label_id();
 
-	tmp->codes.push_back(load_iter);
-	struct indirect_code* dec = newindirect_code("DEC", reg_B, NULL);
-	tmp->codes.push_back(dec);
-	struct indirect_code* store_iter = newindirect_code("@STORE", reg_B, iterator);
-	tmp->codes.push_back(store_iter);
-	struct indirect_code* jump = newindirect_code("@JUMP", loop_label, NULL);
-	tmp->codes.push_back(jump);
-	struct indirect_code* lab_end = newindirect_code("@LABEL", end_label, NULL);
-	tmp->codes.push_back(lab_end);
+	codes.push_back(newindirect_code("@JZERO", reg_B, lab2));
+	codes.push_back(newindirect_code("DEC", reg_B, NULL)); // ITERATOR++
+	codes.push_back(newindirect_code("@STORE", reg_B, iterator)); // STORE ITERATOR
+	// load b & copy iterator
+	codes.push_back(newindirect_code("@LOAD", iterator_end, reg_C));
+	codes.push_back(newindirect_code("SUB", reg_C, reg_B));
+	codes.push_back(newindirect_code("@JZERO", reg_C, lab1));
+	codes.push_back(newindirect_code("@JUMP", end_label, NULL));
+	codes.push_back(newindirect_code("@LABEL", lab1, NULL));
+	codes.push_back(newindirect_code("@JUMP", loop_label, NULL));
+	codes.push_back(newindirect_code("@LABEL", end_label, NULL));
+	codes.push_back(newindirect_code("@LABEL", end_label1, NULL));
+	codes.push_back(newindirect_code("@LABEL", lab2, NULL));
 
-	return iter_block;
 }
 
-// ################### DONE #####################
-struct block* handle_assign(struct ast* asg_node) {
-	struct block* asg = newblock();
 
-	handle_expression(asg_node->s_2, "B", &(asg->codes));
-	struct indirect_code* code = handle_store(asg_node, "B");
-	asg->codes.push_back(code);
-	return asg;
+void handle_assign(struct ast* asg_node) {
+
+	handle_expression(asg_node->s_2, "B");
+	handle_store(asg_node, "B");
 }
 
-// #################### DONE ##########################
-void handle_expression(struct ast* exp_node, string result_reg, vector<struct indirect_code*>* vec) {
+
+void handle_expression(struct ast* exp_node, string result_reg) {
 	if(exp_node->value.compare("value") == 0) {
 		// stała
-		struct indirect_code* var1 = handle_value(exp_node->s_1, result_reg);
-		//
-		// TU MOZE NIE DZIALAC
-		// FIXME
-		(*vec).push_back(var1);
+		handle_value(exp_node->s_1, result_reg);
 	} else {
 		// wyrazenie
-		struct indirect_code* var1 = handle_value(exp_node->s_1, result_reg);
-		struct indirect_code* var2 = handle_value(exp_node->s_2, "C");
-		(*vec).push_back(var1);
-		(*vec).push_back(var2);
 
 		struct variable* reg1 = newvariable("REG", result_reg, "", 0);
 		struct variable* reg2 = newvariable("REG", "C", "", 0);
 		if(exp_node->value.compare("+") == 0) { // + dodawanie
 			struct indirect_code* add = newindirect_code("ADD", reg1, reg2);
-			(*vec).push_back(add);
+			handle_value(exp_node->s_1, result_reg);
+			handle_value(exp_node->s_2, "C");
+			codes.push_back(add);
 		} else if(exp_node->value.compare("-") == 0) { // - odejmowanie
 			struct indirect_code* sub = newindirect_code("SUB", reg1, reg2);
-			(*vec).push_back(sub);
+			handle_value(exp_node->s_1, result_reg);
+			handle_value(exp_node->s_2, "C");
+			codes.push_back(sub);
 		} else if(exp_node->value.compare("*") == 0) { // * mnozenie
 			// DO OPTYMALIZACJI
 			
@@ -3112,40 +2898,35 @@ void handle_expression(struct ast* exp_node, string result_reg, vector<struct in
 
 
 
-			(*vec)[(*vec).size()-2] = handle_value(exp_node->s_1, reg3->id1);
+			handle_value(exp_node->s_1, reg3->id1);
+			handle_value(exp_node->s_2, "C");
+			codes.push_back(newindirect_code("SUB", reg1, reg1));
 
-			(*vec).push_back(newindirect_code("SUB", reg1, reg1));
-
-			// struct indirect_code* cp1 = newindirect_code("@COPY", reg3, reg1);
-			// (*vec).push_back(cp1);
 
 			struct indirect_code* jodd = newindirect_code("@JODD", reg2, lab1);
-			(*vec).push_back(jodd);
+			codes.push_back(jodd);
 			struct indirect_code* jump1 = newindirect_code("@JUMP", lab2, NULL);
-			(*vec).push_back(jump1);
+			codes.push_back(jump1);
 			struct indirect_code* lab1_code = newindirect_code("@LABEL", lab1, NULL);
-			(*vec).push_back(lab1_code);
+			codes.push_back(lab1_code);
 			struct indirect_code* add1 = newindirect_code("ADD", reg1, reg3);
-			(*vec).push_back(add1);
+			codes.push_back(add1);
 			struct indirect_code* lab2_code = newindirect_code("@LABEL", lab2, NULL);
-			(*vec).push_back(lab2_code);
+			codes.push_back(lab2_code);
 			struct indirect_code* add2 = newindirect_code("ADD", reg3, reg3);
-			(*vec).push_back(add2);
+			codes.push_back(add2);
 			struct indirect_code* half = newindirect_code("@HALF", reg2, NULL);
-			(*vec).push_back(half);
-			(*vec).push_back(jodd);
+			codes.push_back(half);
+			codes.push_back(jodd);
 			struct indirect_code* jzero = newindirect_code("@JZERO", reg2, lab_end);
-			(*vec).push_back(jzero);
+			codes.push_back(jzero);
 			struct indirect_code* jump2 = newindirect_code("@JUMP", lab2, NULL);
-			(*vec).push_back(jump2);
+			codes.push_back(jump2);
 			struct indirect_code* lab_end_code = newindirect_code("@LABEL", lab_end, NULL);
-			(*vec).push_back(lab_end_code);
+			codes.push_back(lab_end_code);
 			
 			
-			// struct indirect_code* mul = newindirect_code("@MUL", reg1, reg2);
-			// (*vec).push_back(mul);
 		} else if(exp_node->value.compare("/") == 0) { // / dzielenie
-			// struct indirect_code* div = newindirect_code("@DIV", reg1, reg2);
 			struct variable* reg3 = newvariable("REG", "D", "", 0);
 			struct variable* reg4 = newvariable("REG", "E", "", 0);
 			struct variable* reg5 = newvariable("REG", "F", "", 0);
@@ -3156,73 +2937,69 @@ void handle_expression(struct ast* exp_node, string result_reg, vector<struct in
 			struct variable* lab4 = get_next_label_id();
 			struct variable* lab5 = get_next_label_id();
 			struct variable* lab6 = get_next_label_id();
+			struct variable* lab7 = get_next_label_id();
 
-			(*vec)[(*vec).size()-2] = newindirect_code("SUB", reg1, reg1);
-			(*vec)[(*vec).size()-1] = handle_value(exp_node->s_2, reg3->id1);
+			codes.push_back(newindirect_code("SUB", reg1, reg1));
+			handle_value(exp_node->s_2, reg3->id1);
 			
-			(*vec).push_back(newindirect_code("@JZERO", reg3, lab4)); // dzielenie przez 0
-			(*vec).push_back(handle_value(exp_node->s_1, reg2->id1));
+			cout << "REG# - D :  " << reg3->id1 << endl;
+			codes.push_back(newindirect_code("@JZERO", reg3, lab7)); // dzielenie przez 0
+			handle_value(exp_node->s_1, reg2->id1);
 
 
-			(*vec).push_back(newindirect_code("SUB", reg4, reg4));
+			codes.push_back(newindirect_code("SUB", reg4, reg4));
 			struct indirect_code* inc_4 = newindirect_code("INC", reg4, NULL);
-			(*vec).push_back(inc_4);
+			codes.push_back(inc_4);
 
 			struct indirect_code* lab1_code = newindirect_code("@LABEL", lab1, NULL);
-			(*vec).push_back(lab1_code);
+			codes.push_back(lab1_code);
 			struct indirect_code* copy_5_3 = newindirect_code("@COPY", reg5, reg3);
-			(*vec).push_back(copy_5_3);
+			codes.push_back(copy_5_3);
 			struct indirect_code* sub_5_2 = newindirect_code("SUB", reg5, reg2);
-			(*vec).push_back(sub_5_2);
+			codes.push_back(sub_5_2);
 			struct indirect_code* jzero_r5_2 = newindirect_code("@JZERO", reg5, lab2);
-			(*vec).push_back(jzero_r5_2);
+			codes.push_back(jzero_r5_2);
 			struct indirect_code* jump_3 = newindirect_code("@JUMP", lab3, NULL);
-			(*vec).push_back(jump_3);
+			codes.push_back(jump_3);
 			struct indirect_code* lab2_code = newindirect_code("@LABEL", lab2, NULL);
-			(*vec).push_back(lab2_code);
+			codes.push_back(lab2_code);
 			struct indirect_code* add_3_3 = newindirect_code("ADD", reg3, reg3);
-			(*vec).push_back(add_3_3);
+			codes.push_back(add_3_3);
 			// struct indirect_code* inc_4 = newindirect_code("INC", reg4, NULL);
-			(*vec).push_back(inc_4);
+			codes.push_back(inc_4);
 			struct indirect_code* jump_1 = newindirect_code("@JUMP", lab1, NULL);
-			(*vec).push_back(jump_1);
+			codes.push_back(jump_1);
 			struct indirect_code* lab3_code = newindirect_code("@LABEL", lab3, NULL);
-			(*vec).push_back(lab3_code);
+			codes.push_back(lab3_code);
 			struct indirect_code* jzero_r4_4 = newindirect_code("@JZERO", reg4, lab4);
-			(*vec).push_back(jzero_r4_4);
+			codes.push_back(jzero_r4_4);
 			struct indirect_code* add_1_1 = newindirect_code("ADD", reg1, reg1);
-			(*vec).push_back(add_1_1);
-			// struct indirect_code* jump_5 = newindirect_code("@JUMP", lab5, NULL);
-			(*vec).push_back(copy_5_3);
-			// struct indirect_code* lab4_code = newindirect_code("@LABEL", lab4, NULL);
-			(*vec).push_back(sub_5_2);
+			codes.push_back(add_1_1);
+			codes.push_back(copy_5_3);
+			codes.push_back(sub_5_2);
 			struct indirect_code* jzero_r5_5 = newindirect_code("@JZERO", reg5, lab5);
-			(*vec).push_back(jzero_r5_5);
+			codes.push_back(jzero_r5_5);
 			struct indirect_code* jump_6 = newindirect_code("@JUMP", lab6, NULL);
-			(*vec).push_back(jump_6);
+			codes.push_back(jump_6);
 			struct indirect_code* lab5_code = newindirect_code("@LABEL", lab5, NULL);
-			(*vec).push_back(lab5_code);
+			codes.push_back(lab5_code);
 			struct indirect_code* sub_2_3 = newindirect_code("SUB", reg2, reg3);
-			(*vec).push_back(sub_2_3);
+			codes.push_back(sub_2_3);
 			struct indirect_code* inc_1 = newindirect_code("INC", reg1, NULL);
-			(*vec).push_back(inc_1);
+			codes.push_back(inc_1);
 			struct indirect_code* lab6_code = newindirect_code("@LABEL", lab6, NULL);
-			(*vec).push_back(lab6_code);
+			codes.push_back(lab6_code);
 			struct indirect_code* half_3 = newindirect_code("@HALF", reg3, NULL);
-			(*vec).push_back(half_3);
+			codes.push_back(half_3);
 			struct indirect_code* dec_4 = newindirect_code("DEC", reg4, NULL);
-			(*vec).push_back(dec_4);
-			// struct indirect_code* jump_3 = newindirect_code("@JUMP", lab3, NULL);
-			(*vec).push_back(jump_3);
+			codes.push_back(dec_4);
+			codes.push_back(jump_3);
 			struct indirect_code* lab4_code = newindirect_code("@LABEL", lab4, NULL);
-			(*vec).push_back(lab4_code);
-			
-			
-
-			// (*vec).push_back(div);
+			codes.push_back(lab4_code);
+			struct indirect_code* lab7_code = newindirect_code("@LABEL", lab7, NULL);
+			codes.push_back(lab7_code);
 		} else { // % modulo
 			struct indirect_code* mod = newindirect_code("@MOD", reg1, reg2);
-			// (*vec).push_back(mod);
 			struct variable* reg3 = newvariable("REG", "D", "", 0);
 			struct variable* reg4 = newvariable("REG", "E", "", 0);
 			struct variable* reg5 = newvariable("REG", "F", "", 0);
@@ -3236,70 +3013,66 @@ void handle_expression(struct ast* exp_node, string result_reg, vector<struct in
 			struct variable* lab6 = get_next_label_id();
 			struct variable* lab7 = get_next_label_id();
 
-			(*vec)[(*vec).size()-2] = newindirect_code("SUB", reg1, reg1);
-			(*vec)[(*vec).size()-1] = handle_value(exp_node->s_2, reg3->id1);
-			(*vec).push_back(newindirect_code("@JZERO", reg3, lab5));
-			(*vec).push_back(handle_value(exp_node->s_1, reg2->id1));
+			codes.push_back(newindirect_code("SUB", reg1, reg1));
+			handle_value(exp_node->s_2, reg3->id1);
+			
+			codes.push_back(newindirect_code("@JZERO", reg3, lab7)); // dzielenie przez 0
+			handle_value(exp_node->s_1, reg2->id1);
 
-			struct indirect_code* copy_4_3 = newindirect_code("@COPY", reg4, reg3);
-			(*vec).push_back(copy_4_3);
+
+			codes.push_back(newindirect_code("SUB", reg4, reg4));
+			struct indirect_code* inc_4 = newindirect_code("INC", reg4, NULL);
+			codes.push_back(inc_4);
+
 			struct indirect_code* lab1_code = newindirect_code("@LABEL", lab1, NULL);
-			(*vec).push_back(lab1_code);
+			codes.push_back(lab1_code);
 			struct indirect_code* copy_5_3 = newindirect_code("@COPY", reg5, reg3);
-			(*vec).push_back(copy_5_3);
+			codes.push_back(copy_5_3);
 			struct indirect_code* sub_5_2 = newindirect_code("SUB", reg5, reg2);
-			(*vec).push_back(sub_5_2);
+			codes.push_back(sub_5_2);
 			struct indirect_code* jzero_r5_2 = newindirect_code("@JZERO", reg5, lab2);
-			(*vec).push_back(jzero_r5_2);
+			codes.push_back(jzero_r5_2);
 			struct indirect_code* jump_3 = newindirect_code("@JUMP", lab3, NULL);
-			(*vec).push_back(jump_3);
+			codes.push_back(jump_3);
 			struct indirect_code* lab2_code = newindirect_code("@LABEL", lab2, NULL);
-			(*vec).push_back(lab2_code);
+			codes.push_back(lab2_code);
 			struct indirect_code* add_3_3 = newindirect_code("ADD", reg3, reg3);
-			(*vec).push_back(add_3_3);
+			codes.push_back(add_3_3);
+			// struct indirect_code* inc_4 = newindirect_code("INC", reg4, NULL);
+			codes.push_back(inc_4);
 			struct indirect_code* jump_1 = newindirect_code("@JUMP", lab1, NULL);
-			(*vec).push_back(jump_1);
+			codes.push_back(jump_1);
 			struct indirect_code* lab3_code = newindirect_code("@LABEL", lab3, NULL);
-			(*vec).push_back(lab3_code);
-			struct indirect_code* copy_5_4 = newindirect_code("@COPY", reg5, reg4);
-			(*vec).push_back(copy_5_4);
-			// struct indirect_code* sub = newindirect_code("@JZERO", reg3, lab5);
-			(*vec).push_back(sub_5_2);
-			struct indirect_code* jzero_r5_4 = newindirect_code("@JZERO", reg5, lab4);
-			(*vec).push_back(jzero_r5_4);
-			struct indirect_code* jump_5 = newindirect_code("@JUMP", lab5, NULL);
-			(*vec).push_back(jump_5);
-			struct indirect_code* lab4_code = newindirect_code("@LABEL", lab4, NULL);
-			(*vec).push_back(lab4_code);
-			// struct indirect_code* add_1_1 = newindirect_code("ADD", reg1, reg1);
-			// (*vec).push_back(add_1_1);
-			// struct indirect_code* copy_5_3 = newindirect_code("@JUMP", lab7, NULL);
-			(*vec).push_back(copy_5_3);
-			// struct indirect_code* sub_5_2 = newindirect_code("@LABEL", lab6, NULL);
-			(*vec).push_back(sub_5_2);
-			struct indirect_code* jzero_r5_6 = newindirect_code("@JZERO", reg5, lab6);
-			(*vec).push_back(jzero_r5_6);
-			struct indirect_code* jump_7 = newindirect_code("@JUMP", lab7, NULL);
-			(*vec).push_back(jump_7);
-			struct indirect_code* lab6_code = newindirect_code("@LABEL", lab6, NULL);
-			(*vec).push_back(lab6_code);
-			struct indirect_code* sub_2_3 = newindirect_code("SUB", reg2, reg3);
-			(*vec).push_back(sub_2_3);
-			// struct indirect_code* inc_1 = newindirect_code("INC", reg1, NULL);
-			// (*vec).push_back(inc_1);
-			struct indirect_code* lab7_code = newindirect_code("@LABEL", lab7, NULL);
-			(*vec).push_back(lab7_code);
-			struct indirect_code* half_3 = newindirect_code("@HALF", reg3, NULL);
-			(*vec).push_back(half_3);
-			(*vec).push_back(jump_3);
+			codes.push_back(lab3_code);
+			struct indirect_code* jzero_r4_4 = newindirect_code("@JZERO", reg4, lab4);
+			codes.push_back(jzero_r4_4);
+			codes.push_back(copy_5_3);
+			codes.push_back(sub_5_2);
+			struct indirect_code* jzero_r5_5 = newindirect_code("@JZERO", reg5, lab5);
+			codes.push_back(jzero_r5_5);
+			struct indirect_code* jump_6 = newindirect_code("@JUMP", lab6, NULL);
+			codes.push_back(jump_6);
 			struct indirect_code* lab5_code = newindirect_code("@LABEL", lab5, NULL);
-			(*vec).push_back(lab5_code);
+			codes.push_back(lab5_code);
+			struct indirect_code* sub_2_3 = newindirect_code("SUB", reg2, reg3);
+			codes.push_back(sub_2_3);
+			struct indirect_code* lab6_code = newindirect_code("@LABEL", lab6, NULL);
+			codes.push_back(lab6_code);
+			struct indirect_code* half_3 = newindirect_code("@HALF", reg3, NULL);
+			codes.push_back(half_3);
+			struct indirect_code* dec_4 = newindirect_code("DEC", reg4, NULL);
+			codes.push_back(dec_4);
+			codes.push_back(jump_3);
+			struct indirect_code* lab4_code = newindirect_code("@LABEL", lab4, NULL);
+			codes.push_back(lab4_code);
+			struct indirect_code* lab7_code = newindirect_code("@LABEL", lab7, NULL);
+			codes.push_back(lab7_code);
 		}
 	}
 }
 
-// ########################### DONE ############################
-struct indirect_code* handle_value(struct ast* value_node, string reg) {
+
+void handle_value(struct ast* value_node, string reg) {
 	struct indirect_code* code;
 	if(value_node->s_1->type.compare("num") == 0) {
 		// numer (generowanie stalej)
@@ -3328,11 +3101,11 @@ struct indirect_code* handle_value(struct ast* value_node, string reg) {
 			code = newindirect_code("@LOAD", var1, var2);
 		} 
 	}
-	return code;
+	codes.push_back(code);
 }
 
-// ##################### DONE #########################
-struct indirect_code* handle_store(struct ast* value_node, string reg) {
+
+void handle_store(struct ast* value_node, string reg) {
 	struct indirect_code* code;
 
 	if(value_node->s_1->type.compare("num") == 0) {
@@ -3363,35 +3136,27 @@ struct indirect_code* handle_store(struct ast* value_node, string reg) {
 			code = newindirect_code("@STORE", var1, var2);
 		} 
 	}
-	return code;
+	codes.push_back(code);
 }
 
-struct block* handle_read(struct ast* read_node) {
+void handle_read(struct ast* read_node) {
 	// UWAGA handle_store(node) dostaje normalnie value, a nie identifier
 	// dlatego tutaj nie przekazujemy syna tylko calego node
-	struct block* read_block = newblock();
 
 	struct variable* reg_B = newvariable("REG", "B", "", 0);
 
 	struct indirect_code* code = newindirect_code("@GET", reg_B, NULL);
-	read_block->codes.push_back(code);
+	codes.push_back(code);
 
-	code = handle_store(read_node, "B");
-	read_block->codes.push_back(code);
-	
-	return read_block;
+	handle_store(read_node, "B");
 }
 
-struct block* handle_write(struct ast* write_node) {
-	struct block* write_block = newblock();
+void handle_write(struct ast* write_node) {
 
-	struct indirect_code* code = handle_value(write_node->s_1, "B");
-	write_block->codes.push_back(code);
+	handle_value(write_node->s_1, "B");
 	struct variable* reg_B = newvariable("REG", "B", "", 0);
 
-	code = newindirect_code("@PUT", reg_B, NULL);
-	write_block->codes.push_back(code);
+	struct indirect_code* code = newindirect_code("@PUT", reg_B, NULL);
+	codes.push_back(code);
 
-	
-	return write_block;
 }
