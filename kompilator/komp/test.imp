@@ -9,7 +9,7 @@ IN
         FOR k FROM 3 TO 4 DO
             WRITE k;
         ENDFOR
-        WRITE sito(3000000000000);
+        WRITE sito(j);
         WRITE 11111111;
     ENDFOR
 END

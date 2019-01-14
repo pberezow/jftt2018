@@ -80,13 +80,14 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 174 "parser.y" /* yacc.c:1909  */
+#line 188 "parser.y" /* yacc.c:1909  */
 
 	struct ast* a;
-	char* string;
-	unsigned long long number;
+	// char* string;
+	// unsigned long long number;
+	struct lex_token* lex_token;
 
-#line 90 "parser.tab.h" /* yacc.c:1909  */
+#line 91 "parser.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

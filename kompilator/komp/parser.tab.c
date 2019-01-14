@@ -100,9 +100,14 @@
 	struct variable* get_next_label_id();
 	void get_next_iter(struct ast* ID_node, struct ast* value_node);
 
-	map<string, int> init_iterators;
-	map<string, int> declared_vars;
-	map<string, int> used_variables;
+	map<string, int> init_iterators; // zadeklarowane iteratory
+	map<string, int> declared_vars; // zadeklarowane zmienne
+	map<string, int> used_variables; // przechowywane uzyte zmienne
+	map<string, int> initialized_variables; // sprawdzanie czy zainicjowana
+
+	void init_var(string name);
+	void del_init_var(string name);
+	int check_not_init_vars(struct ast* node);
 
 	void add_var_to_used(string name, int line);
 
@@ -119,6 +124,14 @@
 	void print_blocks(struct block* code_block);
 	void print_indirect_code();
 
+struct lex_token {
+	string str;
+	unsigned long long number;
+	int lineno;
+};
+
+struct lex_token* newlex_token(string str, unsigned long long number, int lineno);
+
 // AST
 
 	struct ast {
@@ -129,9 +142,10 @@
 		struct ast* s_4;
 		string value; // for command and ID eg. "for_to", "while" etc.
 		unsigned long long number;	
+		int lineno;
 	};
 
-	struct ast* newast(string type, struct ast* s_1, struct ast* s_2, struct ast* s_3, struct ast* s_4, string value, unsigned long long number);
+	struct ast* newast(string type, struct ast* s_1, struct ast* s_2, struct ast* s_3, struct ast* s_4, string value, unsigned long long number, int lineno);
 	void free_ast(struct ast* node);
 
 // BLOCK
@@ -235,7 +249,7 @@
 
 
 
-#line 239 "parser.tab.c" /* yacc.c:339  */
+#line 253 "parser.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -305,13 +319,14 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 174 "parser.y" /* yacc.c:355  */
+#line 188 "parser.y" /* yacc.c:355  */
 
 	struct ast* a;
-	char* string;
-	unsigned long long number;
+	// char* string;
+	// unsigned long long number;
+	struct lex_token* lex_token;
 
-#line 315 "parser.tab.c" /* yacc.c:355  */
+#line 330 "parser.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -328,7 +343,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 332 "parser.tab.c" /* yacc.c:358  */
+#line 347 "parser.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -628,10 +643,10 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   204,   204,   212,   218,   226,   232,   237,   244,   248,
-     252,   256,   260,   264,   269,   274,   278,   285,   289,   293,
-     297,   301,   305,   312,   316,   320,   324,   328,   332,   339,
-     344,   352,   357,   363
+       0,   219,   219,   227,   233,   241,   247,   252,   259,   263,
+     267,   271,   275,   279,   284,   289,   293,   300,   304,   308,
+     312,   316,   320,   327,   331,   335,   339,   343,   347,   354,
+     359,   367,   372,   378
 };
 #endif
 
@@ -1477,280 +1492,280 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 205 "parser.y" /* yacc.c:1646  */
+#line 220 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("program", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "", 0);
+						(yyval.a) = newast("program", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "", 0, (yyvsp[-4].lex_token)->lineno);
 						handle_program((yyval.a));
 					}
-#line 1486 "parser.tab.c" /* yacc.c:1646  */
+#line 1501 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 213 "parser.y" /* yacc.c:1646  */
+#line 228 "parser.y" /* yacc.c:1646  */
     {
-						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-1].string), 0);
-						(yyval.a) = newast("declarations", (yyvsp[-2].a), id, NULL, NULL, "dec_var", 0);
+						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-1].lex_token)->str, 0, (yyvsp[-1].lex_token)->lineno);
+						(yyval.a) = newast("declarations", (yyvsp[-2].a), id, NULL, NULL, "dec_var", 0, (yyvsp[-1].lex_token)->lineno);
 						// declared_vars[$2] = 1;
 					}
-#line 1496 "parser.tab.c" /* yacc.c:1646  */
+#line 1511 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 219 "parser.y" /* yacc.c:1646  */
+#line 234 "parser.y" /* yacc.c:1646  */
     {
-						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-6].string), 0);
-						struct ast* num1 = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[-4].number));
-						struct ast* num2 = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[-2].number));
-						(yyval.a) = newast("declarations", (yyvsp[-7].a), id, num1, num2, "dec_arr", 0);
+						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-6].lex_token)->str, 0, (yyvsp[-6].lex_token)->lineno);
+						struct ast* num1 = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[-4].lex_token)->number, (yyvsp[-4].lex_token)->lineno);
+						struct ast* num2 = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[-2].lex_token)->number, (yyvsp[-2].lex_token)->lineno);
+						(yyval.a) = newast("declarations", (yyvsp[-7].a), id, num1, num2, "dec_arr", 0, (yyvsp[-6].lex_token)->lineno);
 						// declared_vars[$2] = 1;
 					}
-#line 1508 "parser.tab.c" /* yacc.c:1646  */
+#line 1523 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 226 "parser.y" /* yacc.c:1646  */
+#line 241 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = NULL;
 					}
-#line 1516 "parser.tab.c" /* yacc.c:1646  */
+#line 1531 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 233 "parser.y" /* yacc.c:1646  */
+#line 248 "parser.y" /* yacc.c:1646  */
     {
 
-						(yyval.a) = newast("commands", (yyvsp[-1].a), (yyvsp[0].a), NULL, NULL, "", 0);
+						(yyval.a) = newast("commands", (yyvsp[-1].a), (yyvsp[0].a), NULL, NULL, "", 0, (yyvsp[0].a)->lineno);
 					}
-#line 1525 "parser.tab.c" /* yacc.c:1646  */
+#line 1540 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 238 "parser.y" /* yacc.c:1646  */
+#line 253 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("commands", (yyvsp[0].a), NULL, NULL, NULL, "", 0);
+						(yyval.a) = newast("commands", (yyvsp[0].a), NULL, NULL, NULL, "", 0, (yyvsp[0].a)->lineno);
 					}
-#line 1533 "parser.tab.c" /* yacc.c:1646  */
+#line 1548 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 245 "parser.y" /* yacc.c:1646  */
+#line 260 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, ":=", 0);
+						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, ":=", 0, (yyvsp[-3].a)->lineno);
 					}
-#line 1541 "parser.tab.c" /* yacc.c:1646  */
+#line 1556 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 249 "parser.y" /* yacc.c:1646  */
+#line 264 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("command", (yyvsp[-5].a), (yyvsp[-3].a), (yyvsp[-1].a), NULL, "if_else", 0);
+						(yyval.a) = newast("command", (yyvsp[-5].a), (yyvsp[-3].a), (yyvsp[-1].a), NULL, "if_else", 0, (yyvsp[-6].lex_token)->lineno);
                     }
-#line 1549 "parser.tab.c" /* yacc.c:1646  */
+#line 1564 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 253 "parser.y" /* yacc.c:1646  */
+#line 268 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "if", 0);
+						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "if", 0, (yyvsp[-4].lex_token)->lineno);
                     }
-#line 1557 "parser.tab.c" /* yacc.c:1646  */
+#line 1572 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 257 "parser.y" /* yacc.c:1646  */
+#line 272 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "while", 0);
+						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "while", 0, (yyvsp[-4].lex_token)->lineno);
                     }
-#line 1565 "parser.tab.c" /* yacc.c:1646  */
+#line 1580 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 261 "parser.y" /* yacc.c:1646  */
+#line 276 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "do_while", 0);
+						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "do_while", 0, (yyvsp[-4].lex_token)->lineno);
 					}
-#line 1573 "parser.tab.c" /* yacc.c:1646  */
+#line 1588 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 265 "parser.y" /* yacc.c:1646  */
+#line 280 "parser.y" /* yacc.c:1646  */
     {
-						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-7].string), 0);
-						(yyval.a) = newast("command", id, (yyvsp[-5].a), (yyvsp[-3].a), (yyvsp[-1].a), "for_to", 0);
+						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-7].lex_token)->str, 0, (yyvsp[-7].lex_token)->lineno);
+						(yyval.a) = newast("command", id, (yyvsp[-5].a), (yyvsp[-3].a), (yyvsp[-1].a), "for_to", 0, (yyvsp[-8].lex_token)->lineno);
 		 			}
-#line 1582 "parser.tab.c" /* yacc.c:1646  */
+#line 1597 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 270 "parser.y" /* yacc.c:1646  */
+#line 285 "parser.y" /* yacc.c:1646  */
     {
-						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-7].string), 0);
-						(yyval.a) = newast("command", id, (yyvsp[-5].a), (yyvsp[-3].a), (yyvsp[-1].a), "for_downto", 0);
+						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-7].lex_token)->str, 0, (yyvsp[-7].lex_token)->lineno);
+						(yyval.a) = newast("command", id, (yyvsp[-5].a), (yyvsp[-3].a), (yyvsp[-1].a), "for_downto", 0, (yyvsp[-8].lex_token)->lineno);
                     }
-#line 1591 "parser.tab.c" /* yacc.c:1646  */
+#line 1606 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 275 "parser.y" /* yacc.c:1646  */
+#line 290 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("command", (yyvsp[-1].a), NULL, NULL, NULL, "read", 0);
+						(yyval.a) = newast("command", (yyvsp[-1].a), NULL, NULL, NULL, "read", 0, (yyvsp[-2].lex_token)->lineno);
 					}
-#line 1599 "parser.tab.c" /* yacc.c:1646  */
+#line 1614 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 279 "parser.y" /* yacc.c:1646  */
+#line 294 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("command", (yyvsp[-1].a), NULL, NULL, NULL, "write", 0);
+						(yyval.a) = newast("command", (yyvsp[-1].a), NULL, NULL, NULL, "write", 0, (yyvsp[-2].lex_token)->lineno);
 					}
-#line 1607 "parser.tab.c" /* yacc.c:1646  */
+#line 1622 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 286 "parser.y" /* yacc.c:1646  */
+#line 301 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("expression", (yyvsp[0].a), NULL, NULL, NULL, "value", 0);
+						(yyval.a) = newast("expression", (yyvsp[0].a), NULL, NULL, NULL, "value", 0, (yyvsp[0].a)->lineno);
 					}
-#line 1615 "parser.tab.c" /* yacc.c:1646  */
+#line 1630 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 290 "parser.y" /* yacc.c:1646  */
+#line 305 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "+", 0);
+						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "+", 0, (yyvsp[-1].lex_token)->lineno);
 					}
-#line 1623 "parser.tab.c" /* yacc.c:1646  */
+#line 1638 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 294 "parser.y" /* yacc.c:1646  */
+#line 309 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "-", 0);
+						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "-", 0, (yyvsp[-1].lex_token)->lineno);
 					}
-#line 1631 "parser.tab.c" /* yacc.c:1646  */
+#line 1646 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 298 "parser.y" /* yacc.c:1646  */
+#line 313 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "*", 0);
+						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "*", 0, (yyvsp[-1].lex_token)->lineno);
 					}
-#line 1639 "parser.tab.c" /* yacc.c:1646  */
+#line 1654 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 302 "parser.y" /* yacc.c:1646  */
+#line 317 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "/", 0);
+						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "/", 0, (yyvsp[-1].lex_token)->lineno);
 					}
-#line 1647 "parser.tab.c" /* yacc.c:1646  */
+#line 1662 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 306 "parser.y" /* yacc.c:1646  */
+#line 321 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "%", 0);
+						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "%", 0, (yyvsp[-1].lex_token)->lineno);
 					}
-#line 1655 "parser.tab.c" /* yacc.c:1646  */
+#line 1670 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 313 "parser.y" /* yacc.c:1646  */
+#line 328 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "=", 0);
+						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "=", 0, (yyvsp[-1].lex_token)->lineno);
 					}
-#line 1663 "parser.tab.c" /* yacc.c:1646  */
+#line 1678 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 317 "parser.y" /* yacc.c:1646  */
+#line 332 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "!=", 0);
+						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "!=", 0, (yyvsp[-1].lex_token)->lineno);
 					}
-#line 1671 "parser.tab.c" /* yacc.c:1646  */
+#line 1686 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 321 "parser.y" /* yacc.c:1646  */
+#line 336 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "<", 0);
+						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "<", 0, (yyvsp[-1].lex_token)->lineno);
 					}
-#line 1679 "parser.tab.c" /* yacc.c:1646  */
+#line 1694 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 325 "parser.y" /* yacc.c:1646  */
+#line 340 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, ">", 0);
+						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, ">", 0, (yyvsp[-1].lex_token)->lineno);
 					}
-#line 1687 "parser.tab.c" /* yacc.c:1646  */
+#line 1702 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 329 "parser.y" /* yacc.c:1646  */
+#line 344 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "<=", 0);
+						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "<=", 0, (yyvsp[-1].lex_token)->lineno);
 					}
-#line 1695 "parser.tab.c" /* yacc.c:1646  */
+#line 1710 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 333 "parser.y" /* yacc.c:1646  */
+#line 348 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, ">=", 0);
+						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, ">=", 0, (yyvsp[-1].lex_token)->lineno);
 					}
-#line 1703 "parser.tab.c" /* yacc.c:1646  */
+#line 1718 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 340 "parser.y" /* yacc.c:1646  */
+#line 355 "parser.y" /* yacc.c:1646  */
     {
-						struct ast* num = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[0].number));
-						(yyval.a) = newast("value", num, NULL, NULL, NULL, "", 0);
+						struct ast* num = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[0].lex_token)->number, (yyvsp[0].lex_token)->lineno);
+						(yyval.a) = newast("value", num, NULL, NULL, NULL, "", 0, (yyvsp[0].lex_token)->lineno);
 					}
-#line 1712 "parser.tab.c" /* yacc.c:1646  */
+#line 1727 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 345 "parser.y" /* yacc.c:1646  */
+#line 360 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("value", (yyvsp[0].a), NULL, NULL, NULL, "", 0);
+						(yyval.a) = newast("value", (yyvsp[0].a), NULL, NULL, NULL, "", 0, (yyvsp[0].a)->lineno);
 						add_var_to_used((yyvsp[0].a)->s_1->value, lineno);
 					}
-#line 1721 "parser.tab.c" /* yacc.c:1646  */
+#line 1736 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 353 "parser.y" /* yacc.c:1646  */
+#line 368 "parser.y" /* yacc.c:1646  */
     {
-						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[0].string), 0);
-						(yyval.a) = newast("identifier_id", id, NULL, NULL, NULL, "", 0);
+						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[0].lex_token)->str, 0, (yyvsp[0].lex_token)->lineno);
+						(yyval.a) = newast("identifier_id", id, NULL, NULL, NULL, "", 0, (yyvsp[0].lex_token)->lineno);
 					}
-#line 1730 "parser.tab.c" /* yacc.c:1646  */
+#line 1745 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 358 "parser.y" /* yacc.c:1646  */
+#line 373 "parser.y" /* yacc.c:1646  */
     {
-						struct ast* id1 = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-3].string), 0);
-						struct ast* id2 = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-1].string), 0);
-						(yyval.a) = newast("identifier_id_id", id1, id2, NULL, NULL, "", 0);
+						struct ast* id1 = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-3].lex_token)->str, 0, (yyvsp[-3].lex_token)->lineno);
+						struct ast* id2 = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-1].lex_token)->str, 0, (yyvsp[-1].lex_token)->lineno);
+						(yyval.a) = newast("identifier_id_id", id1, id2, NULL, NULL, "", 0, (yyvsp[-3].lex_token)->lineno);
 					}
-#line 1740 "parser.tab.c" /* yacc.c:1646  */
+#line 1755 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 364 "parser.y" /* yacc.c:1646  */
+#line 379 "parser.y" /* yacc.c:1646  */
     {
-						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-3].string), 0);
-						struct ast* num = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[-1].number));
-						(yyval.a) = newast("identifier_id_num", id, num, NULL, NULL, "", 0);
+						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-3].lex_token)->str, 0, (yyvsp[-3].lex_token)->lineno);
+						struct ast* num = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[-1].lex_token)->number, (yyvsp[-1].lex_token)->lineno);
+						(yyval.a) = newast("identifier_id_num", id, num, NULL, NULL, "", 0, (yyvsp[-3].lex_token)->lineno);
 					}
-#line 1750 "parser.tab.c" /* yacc.c:1646  */
+#line 1765 "parser.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1754 "parser.tab.c" /* yacc.c:1646  */
+#line 1769 "parser.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1978,7 +1993,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 372 "parser.y" /* yacc.c:1906  */
+#line 387 "parser.y" /* yacc.c:1906  */
 
 
 
@@ -2078,18 +2093,18 @@ void check_not_declared_vars(struct ast* command_node) {
 	if(command_node->type.compare("identifier_id") == 0 || command_node->type.compare("identifier_id_num") == 0) {
 		if(declared_vars.find(command_node->s_1->value) == declared_vars.end() || declared_vars[command_node->s_1->value] != 1) {
 			// do poprawy sprawdzanie czy jest iteratorem
-			string err = "Użycie niezadeklarowanej zmiennej " + command_node->s_1->value + " - pierwsze wystąpienie w lini " + to_string(used_variables[command_node->s_1->value]);
+			string err = "Użycie niezadeklarowanej zmiennej " + command_node->s_1->value + " - w lini " + to_string(command_node->s_1->lineno);
 			yyerror(&err[0]);
 		}
 	} else if(command_node->type.compare("identifier_id_id") == 0) {
 		if(declared_vars.find(command_node->s_1->value) == declared_vars.end() || declared_vars[command_node->s_1->value] != 1) {
 			// do poprawy sprawdzanie czy jest iteratorem
-			string err = "Użycie niezadeklarowanej zmiennej " + command_node->s_1->value + " - pierwsze wystąpienie w lini " + to_string(used_variables[command_node->s_1->value]);
+			string err = "Użycie niezadeklarowanej zmiennej " + command_node->s_1->value + " - w lini " + to_string(command_node->s_1->lineno);
 			yyerror(&err[0]);
 		}
 		if(declared_vars.find(command_node->s_2->value) == declared_vars.end() || declared_vars[command_node->s_2->value] != 1) {
 			// do poprawy sprawdzanie czy jest iteratorem
-			string err = "Użycie niezadeklarowanej zmiennej " + command_node->s_2->value + " - pierwsze wystąpienie w lini " + to_string(used_variables[command_node->s_2->value]);
+			string err = "Użycie niezadeklarowanej zmiennej " + command_node->s_2->value + " - w lini " + to_string(command_node->s_2->lineno);
 			yyerror(&err[0]);
 		}
 	} else if(command_node->value.compare("for_to") == 0 || command_node->value.compare("for_downto") == 0) {
@@ -2117,9 +2132,79 @@ void check_not_declared_vars(struct ast* command_node) {
 	}
 }
 
+struct lex_token* newlex_token(string str, unsigned long long number, int lineno) {
+	struct lex_token* a = (struct lex_token*)malloc(sizeof(struct lex_token));
+
+    if (!a) {
+        yyerror("Błąd. Koniec pamięci\n");
+        exit(1);
+    }
+
+	if(!str.empty())
+    a->str = str;
+    a->number = number;
+	a->lineno = lineno;
+
+    return a;
+}
+
+void init_var(string name) {
+	initialized_variables[name] = 1;
+}
+
+void del_init_var(string name) {
+	initialized_variables[name] = -1;
+}
+
+int check_not_init_vars(struct ast* node) {
+	// TODO - obsluga tablic
+	if(node->value.compare(":=") == 0) {
+		init_var(node->s_1->s_1->value);
+		check_not_init_vars(node->s_2);
+	} else if(node->value.compare("read") == 0) {
+		init_var(node->s_1->s_1->value);
+		check_not_init_vars(node->s_1);
+	} else if(node->value.compare("for_to") == 0 || node->value.compare("for_downto") == 0) {
+		init_var(node->s_1->value);
+
+		check_not_init_vars(node->s_2);
+		check_not_init_vars(node->s_3);
+		check_not_init_vars(node->s_4);
+
+		del_init_var(node->s_1->value);
+	} else if(node->type.compare("identifier_id") == 0 || node->type.compare("identifier_id_num") == 0) {
+		if(initialized_variables.find(node->s_1->value) == initialized_variables.end()) {
+			string err = "Uzycie niezainicjowanej zmiennej " + node->s_1->value + " w lini " + to_string(node->s_1->lineno);
+			yyerror(&err[0]); 
+		}
+	} else if(node->type.compare("identifier_id_id") == 0) {
+		if(initialized_variables.find(node->s_1->value) == initialized_variables.end()) {
+			string err = "Uzycie niezainicjowanej zmiennej " + node->s_1->value + " w lini " + to_string(node->s_1->lineno);
+			yyerror(&err[0]); 
+		}
+		if(initialized_variables.find(node->s_2->value) == initialized_variables.end()) {
+			string err = "Uzycie niezainicjowanej zmiennej " + node->s_2->value + " w lini " + to_string(node->s_2->lineno);
+			yyerror(&err[0]); 
+		}
+	} else {
+		if(node->s_1 != NULL) {
+			check_not_init_vars(node->s_1);
+		}
+		if(node->s_2 != NULL) {
+			check_not_init_vars(node->s_2);
+		}
+		if(node->s_3 != NULL) {
+			check_not_init_vars(node->s_3);
+		}
+		if(node->s_4 != NULL) {
+			check_not_init_vars(node->s_4);
+		}
+	}
+}
+
 // AST
 
-struct ast* newast(string type, struct ast* s_1, struct ast* s_2, struct ast* s_3, struct ast* s_4, string value, unsigned long long number) {
+struct ast* newast(string type, struct ast* s_1, struct ast* s_2, struct ast* s_3, struct ast* s_4, string value, unsigned long long number, int lineno) {
 	struct ast* a = (struct ast*)malloc(sizeof(struct ast));
 
     if (!a) {
@@ -2135,6 +2220,7 @@ struct ast* newast(string type, struct ast* s_1, struct ast* s_2, struct ast* s_
 	if(!value.empty())
     a->value = value;
 	a->number = number;
+	a->lineno = lineno;
 
     return a;
 }
@@ -2335,6 +2421,7 @@ int semantic_analyse(struct ast* root) {
 	// TODO
 	declare_variables(root->s_1);
 	check_not_declared_vars(root->s_2);
+	check_not_init_vars(root->s_2);
 
 	return 1;
 }

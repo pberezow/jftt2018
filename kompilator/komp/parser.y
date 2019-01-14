@@ -35,9 +35,14 @@
 	struct variable* get_next_label_id();
 	void get_next_iter(struct ast* ID_node, struct ast* value_node);
 
-	map<string, int> init_iterators;
-	map<string, int> declared_vars;
-	map<string, int> used_variables;
+	map<string, int> init_iterators; // zadeklarowane iteratory
+	map<string, int> declared_vars; // zadeklarowane zmienne
+	map<string, int> used_variables; // przechowywane uzyte zmienne
+	map<string, int> initialized_variables; // sprawdzanie czy zainicjowana
+
+	void init_var(string name);
+	void del_init_var(string name);
+	int check_not_init_vars(struct ast* node);
 
 	void add_var_to_used(string name, int line);
 
@@ -54,6 +59,14 @@
 	void print_blocks(struct block* code_block);
 	void print_indirect_code();
 
+struct lex_token {
+	string str;
+	unsigned long long number;
+	int lineno;
+};
+
+struct lex_token* newlex_token(string str, unsigned long long number, int lineno);
+
 // AST
 
 	struct ast {
@@ -64,9 +77,10 @@
 		struct ast* s_4;
 		string value; // for command and ID eg. "for_to", "while" etc.
 		unsigned long long number;	
+		int lineno;
 	};
 
-	struct ast* newast(string type, struct ast* s_1, struct ast* s_2, struct ast* s_3, struct ast* s_4, string value, unsigned long long number);
+	struct ast* newast(string type, struct ast* s_1, struct ast* s_2, struct ast* s_3, struct ast* s_4, string value, unsigned long long number, int lineno);
 	void free_ast(struct ast* node);
 
 // BLOCK
@@ -173,21 +187,22 @@
 
 %union {
 	struct ast* a;
-	char* string;
-	unsigned long long number;
+	// char* string;
+	// unsigned long long number;
+	struct lex_token* lex_token;
 }
 
-%token <string> DECLARE IN END
-%token <string> IF THEN ELSE ENDIF
-%token <string> WHILE DO ENDWHILE ENDDO
-%token <string> FOR FROM TO DOWNTO ENDFOR
-%token <string> READ WRITE
-%token <string> ASSIGN
-%token <string> '+' '-' '*' '/' '%'
-%token <string> EQ NEQ LT GT LTE GTE
-%token <string> '(' ')' ';'
-%token <string> ID
-%token <number> NUM
+%token <lex_token> DECLARE IN END
+%token <lex_token> IF THEN ELSE ENDIF
+%token <lex_token> WHILE DO ENDWHILE ENDDO
+%token <lex_token> FOR FROM TO DOWNTO ENDFOR
+%token <lex_token> READ WRITE
+%token <lex_token> ASSIGN
+%token <lex_token> '+' '-' '*' '/' '%'
+%token <lex_token> EQ NEQ LT GT LTE GTE
+%token <lex_token> '(' ')' ';'
+%token <lex_token> ID
+%token <lex_token> NUM
 
 %type <a> program
 %type <a> declarations
@@ -203,7 +218,7 @@
 program: 
 	DECLARE declarations IN commands END
 					{
-						$$ = newast("program", $2, $4, NULL, NULL, "", 0);
+						$$ = newast("program", $2, $4, NULL, NULL, "", 0, $1->lineno);
 						handle_program($$);
 					}
 ;
@@ -211,16 +226,16 @@ program:
 declarations: 
 	declarations ID';' 				
 					{
-						struct ast* id = newast("id", NULL, NULL, NULL, NULL, $2, 0);
-						$$ = newast("declarations", $1, id, NULL, NULL, "dec_var", 0);
+						struct ast* id = newast("id", NULL, NULL, NULL, NULL, $2->str, 0, $2->lineno);
+						$$ = newast("declarations", $1, id, NULL, NULL, "dec_var", 0, $2->lineno);
 						// declared_vars[$2] = 1;
 					}
 |	declarations ID'('NUM':'NUM')'';'
 					{
-						struct ast* id = newast("id", NULL, NULL, NULL, NULL, $2, 0);
-						struct ast* num1 = newast("num", NULL, NULL, NULL, NULL, "", $4);
-						struct ast* num2 = newast("num", NULL, NULL, NULL, NULL, "", $6);
-						$$ = newast("declarations", $1, id, num1, num2, "dec_arr", 0);
+						struct ast* id = newast("id", NULL, NULL, NULL, NULL, $2->str, 0, $2->lineno);
+						struct ast* num1 = newast("num", NULL, NULL, NULL, NULL, "", $4->number, $4->lineno);
+						struct ast* num2 = newast("num", NULL, NULL, NULL, NULL, "", $6->number, $6->lineno);
+						$$ = newast("declarations", $1, id, num1, num2, "dec_arr", 0, $2->lineno);
 						// declared_vars[$2] = 1;
 					}
 | 					{
@@ -232,118 +247,118 @@ commands:
 	commands command
 					{
 
-						$$ = newast("commands", $1, $2, NULL, NULL, "", 0);
+						$$ = newast("commands", $1, $2, NULL, NULL, "", 0, $2->lineno);
 					}
 |	command
 					{
-						$$ = newast("commands", $1, NULL, NULL, NULL, "", 0);
+						$$ = newast("commands", $1, NULL, NULL, NULL, "", 0, $1->lineno);
 					}
 ;
 
 command:
 	identifier ASSIGN expression';'
 					{
-						$$ = newast("command", $1, $3, NULL, NULL, ":=", 0);
+						$$ = newast("command", $1, $3, NULL, NULL, ":=", 0, $1->lineno);
 					}
 |	IF condition THEN commands ELSE commands ENDIF
                     {
-						$$ = newast("command", $2, $4, $6, NULL, "if_else", 0);
+						$$ = newast("command", $2, $4, $6, NULL, "if_else", 0, $1->lineno);
                     }
 |	IF condition THEN commands ENDIF
                     {
-						$$ = newast("command", $2, $4, NULL, NULL, "if", 0);
+						$$ = newast("command", $2, $4, NULL, NULL, "if", 0, $1->lineno);
                     }
 |	WHILE condition DO commands ENDWHILE
                     {
-						$$ = newast("command", $2, $4, NULL, NULL, "while", 0);
+						$$ = newast("command", $2, $4, NULL, NULL, "while", 0, $1->lineno);
                     }
 |	DO commands WHILE condition ENDDO
 					{
-						$$ = newast("command", $2, $4, NULL, NULL, "do_while", 0);
+						$$ = newast("command", $2, $4, NULL, NULL, "do_while", 0, $1->lineno);
 					} 
 |	FOR ID FROM value TO value DO commands ENDFOR
 					{
-						struct ast* id = newast("id", NULL, NULL, NULL, NULL, $2, 0);
-						$$ = newast("command", id, $4, $6, $8, "for_to", 0);
+						struct ast* id = newast("id", NULL, NULL, NULL, NULL, $2->str, 0, $2->lineno);
+						$$ = newast("command", id, $4, $6, $8, "for_to", 0, $1->lineno);
 		 			}
 |	FOR ID FROM value DOWNTO value DO commands ENDFOR
                     {
-						struct ast* id = newast("id", NULL, NULL, NULL, NULL, $2, 0);
-						$$ = newast("command", id, $4, $6, $8, "for_downto", 0);
+						struct ast* id = newast("id", NULL, NULL, NULL, NULL, $2->str, 0, $2->lineno);
+						$$ = newast("command", id, $4, $6, $8, "for_downto", 0, $1->lineno);
                     }
 |	READ identifier';'
 					{
-						$$ = newast("command", $2, NULL, NULL, NULL, "read", 0);
+						$$ = newast("command", $2, NULL, NULL, NULL, "read", 0, $1->lineno);
 					}
 |	WRITE value';'
 					{
-						$$ = newast("command", $2, NULL, NULL, NULL, "write", 0);
+						$$ = newast("command", $2, NULL, NULL, NULL, "write", 0, $1->lineno);
 					}
 ;
 
 expression:
 	value
 					{
-						$$ = newast("expression", $1, NULL, NULL, NULL, "value", 0);
+						$$ = newast("expression", $1, NULL, NULL, NULL, "value", 0, $1->lineno);
 					}
 |	value '+' value
 					{
-						$$ = newast("expression", $1, $3, NULL, NULL, "+", 0);
+						$$ = newast("expression", $1, $3, NULL, NULL, "+", 0, $2->lineno);
 					}
 |	value '-' value
 					{
-						$$ = newast("expression", $1, $3, NULL, NULL, "-", 0);
+						$$ = newast("expression", $1, $3, NULL, NULL, "-", 0, $2->lineno);
 					}
 |	value '*' value
 					{
-						$$ = newast("expression", $1, $3, NULL, NULL, "*", 0);
+						$$ = newast("expression", $1, $3, NULL, NULL, "*", 0, $2->lineno);
 					}
 |	value '/' value
 					{
-						$$ = newast("expression", $1, $3, NULL, NULL, "/", 0);
+						$$ = newast("expression", $1, $3, NULL, NULL, "/", 0, $2->lineno);
 					}
 |	value '%' value
 					{
-						$$ = newast("expression", $1, $3, NULL, NULL, "%", 0);
+						$$ = newast("expression", $1, $3, NULL, NULL, "%", 0, $2->lineno);
 					}
 ;
 
 condition:
 	value EQ value
 					{
-						$$ = newast("condition", $1, $3, NULL, NULL, "=", 0);
+						$$ = newast("condition", $1, $3, NULL, NULL, "=", 0, $2->lineno);
 					}
 |	value NEQ value
 					{
-						$$ = newast("condition", $1, $3, NULL, NULL, "!=", 0);
+						$$ = newast("condition", $1, $3, NULL, NULL, "!=", 0, $2->lineno);
 					}
 |	value LT value
 					{
-						$$ = newast("condition", $1, $3, NULL, NULL, "<", 0);
+						$$ = newast("condition", $1, $3, NULL, NULL, "<", 0, $2->lineno);
 					}
 |	value GT value
 					{
-						$$ = newast("condition", $1, $3, NULL, NULL, ">", 0);
+						$$ = newast("condition", $1, $3, NULL, NULL, ">", 0, $2->lineno);
 					}
 |	value LTE value
 					{
-						$$ = newast("condition", $1, $3, NULL, NULL, "<=", 0);
+						$$ = newast("condition", $1, $3, NULL, NULL, "<=", 0, $2->lineno);
 					}
 |	value GTE value
 					{
-						$$ = newast("condition", $1, $3, NULL, NULL, ">=", 0);
+						$$ = newast("condition", $1, $3, NULL, NULL, ">=", 0, $2->lineno);
 					}
 ;
 
 value:
 	NUM
 					{
-						struct ast* num = newast("num", NULL, NULL, NULL, NULL, "", $1);
-						$$ = newast("value", num, NULL, NULL, NULL, "", 0);
+						struct ast* num = newast("num", NULL, NULL, NULL, NULL, "", $1->number, $1->lineno);
+						$$ = newast("value", num, NULL, NULL, NULL, "", 0, $1->lineno);
 					}
 |	identifier
 					{
-						$$ = newast("value", $1, NULL, NULL, NULL, "", 0);
+						$$ = newast("value", $1, NULL, NULL, NULL, "", 0, $1->lineno);
 						add_var_to_used($1->s_1->value, lineno);
 					}
 ;
@@ -351,20 +366,20 @@ value:
 identifier:
 	ID
 					{
-						struct ast* id = newast("id", NULL, NULL, NULL, NULL, $1, 0);
-						$$ = newast("identifier_id", id, NULL, NULL, NULL, "", 0);
+						struct ast* id = newast("id", NULL, NULL, NULL, NULL, $1->str, 0, $1->lineno);
+						$$ = newast("identifier_id", id, NULL, NULL, NULL, "", 0, $1->lineno);
 					}
 |	ID'('ID')'
 					{
-						struct ast* id1 = newast("id", NULL, NULL, NULL, NULL, $1, 0);
-						struct ast* id2 = newast("id", NULL, NULL, NULL, NULL, $3, 0);
-						$$ = newast("identifier_id_id", id1, id2, NULL, NULL, "", 0);
+						struct ast* id1 = newast("id", NULL, NULL, NULL, NULL, $1->str, 0, $1->lineno);
+						struct ast* id2 = newast("id", NULL, NULL, NULL, NULL, $3->str, 0, $3->lineno);
+						$$ = newast("identifier_id_id", id1, id2, NULL, NULL, "", 0, $1->lineno);
 					}
 |	ID'('NUM')'
 					{
-						struct ast* id = newast("id", NULL, NULL, NULL, NULL, $1, 0);
-						struct ast* num = newast("num", NULL, NULL, NULL, NULL, "", $3);
-						$$ = newast("identifier_id_num", id, num, NULL, NULL, "", 0);
+						struct ast* id = newast("id", NULL, NULL, NULL, NULL, $1->str, 0, $1->lineno);
+						struct ast* num = newast("num", NULL, NULL, NULL, NULL, "", $3->number, $3->lineno);
+						$$ = newast("identifier_id_num", id, num, NULL, NULL, "", 0, $1->lineno);
 					}
 ;
 
@@ -468,18 +483,18 @@ void check_not_declared_vars(struct ast* command_node) {
 	if(command_node->type.compare("identifier_id") == 0 || command_node->type.compare("identifier_id_num") == 0) {
 		if(declared_vars.find(command_node->s_1->value) == declared_vars.end() || declared_vars[command_node->s_1->value] != 1) {
 			// do poprawy sprawdzanie czy jest iteratorem
-			string err = "Użycie niezadeklarowanej zmiennej " + command_node->s_1->value + " - pierwsze wystąpienie w lini " + to_string(used_variables[command_node->s_1->value]);
+			string err = "Użycie niezadeklarowanej zmiennej " + command_node->s_1->value + " - w lini " + to_string(command_node->s_1->lineno);
 			yyerror(&err[0]);
 		}
 	} else if(command_node->type.compare("identifier_id_id") == 0) {
 		if(declared_vars.find(command_node->s_1->value) == declared_vars.end() || declared_vars[command_node->s_1->value] != 1) {
 			// do poprawy sprawdzanie czy jest iteratorem
-			string err = "Użycie niezadeklarowanej zmiennej " + command_node->s_1->value + " - pierwsze wystąpienie w lini " + to_string(used_variables[command_node->s_1->value]);
+			string err = "Użycie niezadeklarowanej zmiennej " + command_node->s_1->value + " - w lini " + to_string(command_node->s_1->lineno);
 			yyerror(&err[0]);
 		}
 		if(declared_vars.find(command_node->s_2->value) == declared_vars.end() || declared_vars[command_node->s_2->value] != 1) {
 			// do poprawy sprawdzanie czy jest iteratorem
-			string err = "Użycie niezadeklarowanej zmiennej " + command_node->s_2->value + " - pierwsze wystąpienie w lini " + to_string(used_variables[command_node->s_2->value]);
+			string err = "Użycie niezadeklarowanej zmiennej " + command_node->s_2->value + " - w lini " + to_string(command_node->s_2->lineno);
 			yyerror(&err[0]);
 		}
 	} else if(command_node->value.compare("for_to") == 0 || command_node->value.compare("for_downto") == 0) {
@@ -507,9 +522,79 @@ void check_not_declared_vars(struct ast* command_node) {
 	}
 }
 
+struct lex_token* newlex_token(string str, unsigned long long number, int lineno) {
+	struct lex_token* a = (struct lex_token*)malloc(sizeof(struct lex_token));
+
+    if (!a) {
+        yyerror("Błąd. Koniec pamięci\n");
+        exit(1);
+    }
+
+	if(!str.empty())
+    a->str = str;
+    a->number = number;
+	a->lineno = lineno;
+
+    return a;
+}
+
+void init_var(string name) {
+	initialized_variables[name] = 1;
+}
+
+void del_init_var(string name) {
+	initialized_variables[name] = -1;
+}
+
+int check_not_init_vars(struct ast* node) {
+	// TODO - obsluga tablic
+	if(node->value.compare(":=") == 0) {
+		init_var(node->s_1->s_1->value);
+		check_not_init_vars(node->s_2);
+	} else if(node->value.compare("read") == 0) {
+		init_var(node->s_1->s_1->value);
+		check_not_init_vars(node->s_1);
+	} else if(node->value.compare("for_to") == 0 || node->value.compare("for_downto") == 0) {
+		init_var(node->s_1->value);
+
+		check_not_init_vars(node->s_2);
+		check_not_init_vars(node->s_3);
+		check_not_init_vars(node->s_4);
+
+		del_init_var(node->s_1->value);
+	} else if(node->type.compare("identifier_id") == 0 || node->type.compare("identifier_id_num") == 0) {
+		if(initialized_variables.find(node->s_1->value) == initialized_variables.end()) {
+			string err = "Uzycie niezainicjowanej zmiennej " + node->s_1->value + " w lini " + to_string(node->s_1->lineno);
+			yyerror(&err[0]); 
+		}
+	} else if(node->type.compare("identifier_id_id") == 0) {
+		if(initialized_variables.find(node->s_1->value) == initialized_variables.end()) {
+			string err = "Uzycie niezainicjowanej zmiennej " + node->s_1->value + " w lini " + to_string(node->s_1->lineno);
+			yyerror(&err[0]); 
+		}
+		if(initialized_variables.find(node->s_2->value) == initialized_variables.end()) {
+			string err = "Uzycie niezainicjowanej zmiennej " + node->s_2->value + " w lini " + to_string(node->s_2->lineno);
+			yyerror(&err[0]); 
+		}
+	} else {
+		if(node->s_1 != NULL) {
+			check_not_init_vars(node->s_1);
+		}
+		if(node->s_2 != NULL) {
+			check_not_init_vars(node->s_2);
+		}
+		if(node->s_3 != NULL) {
+			check_not_init_vars(node->s_3);
+		}
+		if(node->s_4 != NULL) {
+			check_not_init_vars(node->s_4);
+		}
+	}
+}
+
 // AST
 
-struct ast* newast(string type, struct ast* s_1, struct ast* s_2, struct ast* s_3, struct ast* s_4, string value, unsigned long long number) {
+struct ast* newast(string type, struct ast* s_1, struct ast* s_2, struct ast* s_3, struct ast* s_4, string value, unsigned long long number, int lineno) {
 	struct ast* a = (struct ast*)malloc(sizeof(struct ast));
 
     if (!a) {
@@ -525,6 +610,7 @@ struct ast* newast(string type, struct ast* s_1, struct ast* s_2, struct ast* s_
 	if(!value.empty())
     a->value = value;
 	a->number = number;
+	a->lineno = lineno;
 
     return a;
 }
@@ -725,6 +811,7 @@ int semantic_analyse(struct ast* root) {
 	// TODO
 	declare_variables(root->s_1);
 	check_not_declared_vars(root->s_2);
+	check_not_init_vars(root->s_2);
 
 	return 1;
 }
