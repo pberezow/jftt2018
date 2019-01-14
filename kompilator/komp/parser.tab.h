@@ -80,7 +80,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 160 "parser.y" /* yacc.c:1909  */
+#line 174 "parser.y" /* yacc.c:1909  */
 
 	struct ast* a;
 	char* string;

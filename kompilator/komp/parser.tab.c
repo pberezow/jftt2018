@@ -84,27 +84,40 @@
 	ofstream outfile;
 
 // GLOBALS
-int label_id = 0;
-int iterator_id = 0;
-int linoleo = 0;
-// struct block* root;
+	int label_id = 0;
+	unsigned long long iterator_id = 0;
+	int linoleo = 0;
 
-map<string, string> jumps;
-vector<string> instructs;
+	map<string, string> jumps;
+	vector<string> instructs;
 
-vector<struct indirect_code*> codes;
+	vector<struct indirect_code*> codes;
 
-map<string, int> vars;
-map<string, struct arr*> arrays;
-map<string, int> labels;
+	map<string, int> vars;
+	map<string, struct arr*> arrays;
+	map<string, int> labels;
 
-struct variable* get_next_label_id();
-void get_next_iter(struct ast* ID_node, struct ast* value_node);
+	struct variable* get_next_label_id();
+	void get_next_iter(struct ast* ID_node, struct ast* value_node);
+
+	map<string, int> init_iterators;
+	map<string, int> declared_vars;
+	map<string, int> used_variables;
+
+	void add_var_to_used(string name, int line);
+
+	void check_not_declared_vars(struct ast* command_node);
+
+	int is_variable(string name);
+
+	int was_initialized(string name);
+	void init_iterator(string name);
+	void del_iterator(string name);
 
 
 // PRINTS
-void print_blocks(struct block* code_block);
-void print_indirect_code();
+	void print_blocks(struct block* code_block);
+	void print_indirect_code();
 
 // AST
 
@@ -119,6 +132,7 @@ void print_indirect_code();
 	};
 
 	struct ast* newast(string type, struct ast* s_1, struct ast* s_2, struct ast* s_3, struct ast* s_4, string value, unsigned long long number);
+	void free_ast(struct ast* node);
 
 // BLOCK
 	struct block {
@@ -151,12 +165,12 @@ void print_indirect_code();
 // ARRAY
 	struct arr {
 		string id;
-		int from;
-		int to;
-		int mem_idx;
+		unsigned long long from;
+		unsigned long long to;
+		unsigned long long mem_idx;
 	};
 
-	struct arr* newarray(string id, int from, int to, int mem_idx);
+	struct arr* newarray(string id, unsigned long long from, unsigned long long to, unsigned long long mem_idx);
 
 // HANDLERS
 
@@ -204,7 +218,7 @@ void print_indirect_code();
 
 	void gen_load(struct indirect_code* code);
 	void gen_store(struct indirect_code* code);
-	void gen_const(string reg, int val);
+	void gen_const(string reg, unsigned long long val);
 	void gen_add(struct indirect_code* code);
 	void gen_sub(struct indirect_code* code);
 	void gen_dec(struct indirect_code* code);
@@ -221,7 +235,7 @@ void print_indirect_code();
 
 
 
-#line 225 "parser.tab.c" /* yacc.c:339  */
+#line 239 "parser.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -291,13 +305,13 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 160 "parser.y" /* yacc.c:355  */
+#line 174 "parser.y" /* yacc.c:355  */
 
 	struct ast* a;
 	char* string;
 	unsigned long long number;
 
-#line 301 "parser.tab.c" /* yacc.c:355  */
+#line 315 "parser.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -314,7 +328,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 318 "parser.tab.c" /* yacc.c:358  */
+#line 332 "parser.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -614,10 +628,10 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   190,   190,   198,   203,   210,   216,   221,   228,   232,
-     236,   240,   244,   248,   253,   258,   262,   269,   273,   277,
-     281,   285,   289,   296,   300,   304,   308,   312,   316,   323,
-     328,   335,   340,   346
+       0,   204,   204,   212,   218,   226,   232,   237,   244,   248,
+     252,   256,   260,   264,   269,   274,   278,   285,   289,   293,
+     297,   301,   305,   312,   316,   320,   324,   328,   332,   339,
+     344,   352,   357,   363
 };
 #endif
 
@@ -1463,277 +1477,280 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 191 "parser.y" /* yacc.c:1646  */
+#line 205 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("program", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "", 0);
 						handle_program((yyval.a));
 					}
-#line 1472 "parser.tab.c" /* yacc.c:1646  */
+#line 1486 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 199 "parser.y" /* yacc.c:1646  */
+#line 213 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-1].string), 0);
 						(yyval.a) = newast("declarations", (yyvsp[-2].a), id, NULL, NULL, "dec_var", 0);
+						// declared_vars[$2] = 1;
 					}
-#line 1481 "parser.tab.c" /* yacc.c:1646  */
+#line 1496 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 204 "parser.y" /* yacc.c:1646  */
+#line 219 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-6].string), 0);
 						struct ast* num1 = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[-4].number));
 						struct ast* num2 = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[-2].number));
 						(yyval.a) = newast("declarations", (yyvsp[-7].a), id, num1, num2, "dec_arr", 0);
+						// declared_vars[$2] = 1;
 					}
-#line 1492 "parser.tab.c" /* yacc.c:1646  */
+#line 1508 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 210 "parser.y" /* yacc.c:1646  */
+#line 226 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = NULL;
 					}
-#line 1500 "parser.tab.c" /* yacc.c:1646  */
+#line 1516 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 217 "parser.y" /* yacc.c:1646  */
+#line 233 "parser.y" /* yacc.c:1646  */
     {
 
 						(yyval.a) = newast("commands", (yyvsp[-1].a), (yyvsp[0].a), NULL, NULL, "", 0);
 					}
-#line 1509 "parser.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 7:
-#line 222 "parser.y" /* yacc.c:1646  */
-    {
-						(yyval.a) = newast("commands", (yyvsp[0].a), NULL, NULL, NULL, "", 0);
-					}
-#line 1517 "parser.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 8:
-#line 229 "parser.y" /* yacc.c:1646  */
-    {
-						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, ":=", 0);
-					}
 #line 1525 "parser.tab.c" /* yacc.c:1646  */
     break;
 
-  case 9:
-#line 233 "parser.y" /* yacc.c:1646  */
+  case 7:
+#line 238 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("command", (yyvsp[-5].a), (yyvsp[-3].a), (yyvsp[-1].a), NULL, "if_else", 0);
-                    }
+						(yyval.a) = newast("commands", (yyvsp[0].a), NULL, NULL, NULL, "", 0);
+					}
 #line 1533 "parser.tab.c" /* yacc.c:1646  */
     break;
 
-  case 10:
-#line 237 "parser.y" /* yacc.c:1646  */
+  case 8:
+#line 245 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "if", 0);
-                    }
+						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, ":=", 0);
+					}
 #line 1541 "parser.tab.c" /* yacc.c:1646  */
     break;
 
-  case 11:
-#line 241 "parser.y" /* yacc.c:1646  */
+  case 9:
+#line 249 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "while", 0);
+						(yyval.a) = newast("command", (yyvsp[-5].a), (yyvsp[-3].a), (yyvsp[-1].a), NULL, "if_else", 0);
                     }
 #line 1549 "parser.tab.c" /* yacc.c:1646  */
     break;
 
-  case 12:
-#line 245 "parser.y" /* yacc.c:1646  */
+  case 10:
+#line 253 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "do_while", 0);
-					}
+						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "if", 0);
+                    }
 #line 1557 "parser.tab.c" /* yacc.c:1646  */
     break;
 
+  case 11:
+#line 257 "parser.y" /* yacc.c:1646  */
+    {
+						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "while", 0);
+                    }
+#line 1565 "parser.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 12:
+#line 261 "parser.y" /* yacc.c:1646  */
+    {
+						(yyval.a) = newast("command", (yyvsp[-3].a), (yyvsp[-1].a), NULL, NULL, "do_while", 0);
+					}
+#line 1573 "parser.tab.c" /* yacc.c:1646  */
+    break;
+
   case 13:
-#line 249 "parser.y" /* yacc.c:1646  */
+#line 265 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-7].string), 0);
 						(yyval.a) = newast("command", id, (yyvsp[-5].a), (yyvsp[-3].a), (yyvsp[-1].a), "for_to", 0);
 		 			}
-#line 1566 "parser.tab.c" /* yacc.c:1646  */
+#line 1582 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 254 "parser.y" /* yacc.c:1646  */
+#line 270 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-7].string), 0);
 						(yyval.a) = newast("command", id, (yyvsp[-5].a), (yyvsp[-3].a), (yyvsp[-1].a), "for_downto", 0);
                     }
-#line 1575 "parser.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 15:
-#line 259 "parser.y" /* yacc.c:1646  */
-    {
-						(yyval.a) = newast("command", (yyvsp[-1].a), NULL, NULL, NULL, "read", 0);
-					}
-#line 1583 "parser.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 16:
-#line 263 "parser.y" /* yacc.c:1646  */
-    {
-						(yyval.a) = newast("command", (yyvsp[-1].a), NULL, NULL, NULL, "write", 0);
-					}
 #line 1591 "parser.tab.c" /* yacc.c:1646  */
     break;
 
-  case 17:
-#line 270 "parser.y" /* yacc.c:1646  */
+  case 15:
+#line 275 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("expression", (yyvsp[0].a), NULL, NULL, NULL, "value", 0);
+						(yyval.a) = newast("command", (yyvsp[-1].a), NULL, NULL, NULL, "read", 0);
 					}
 #line 1599 "parser.tab.c" /* yacc.c:1646  */
     break;
 
-  case 18:
-#line 274 "parser.y" /* yacc.c:1646  */
+  case 16:
+#line 279 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "+", 0);
+						(yyval.a) = newast("command", (yyvsp[-1].a), NULL, NULL, NULL, "write", 0);
 					}
 #line 1607 "parser.tab.c" /* yacc.c:1646  */
     break;
 
-  case 19:
-#line 278 "parser.y" /* yacc.c:1646  */
+  case 17:
+#line 286 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "-", 0);
+						(yyval.a) = newast("expression", (yyvsp[0].a), NULL, NULL, NULL, "value", 0);
 					}
 #line 1615 "parser.tab.c" /* yacc.c:1646  */
     break;
 
-  case 20:
-#line 282 "parser.y" /* yacc.c:1646  */
+  case 18:
+#line 290 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "*", 0);
+						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "+", 0);
 					}
 #line 1623 "parser.tab.c" /* yacc.c:1646  */
     break;
 
-  case 21:
-#line 286 "parser.y" /* yacc.c:1646  */
+  case 19:
+#line 294 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "/", 0);
+						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "-", 0);
 					}
 #line 1631 "parser.tab.c" /* yacc.c:1646  */
     break;
 
-  case 22:
-#line 290 "parser.y" /* yacc.c:1646  */
+  case 20:
+#line 298 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "%", 0);
+						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "*", 0);
 					}
 #line 1639 "parser.tab.c" /* yacc.c:1646  */
     break;
 
-  case 23:
-#line 297 "parser.y" /* yacc.c:1646  */
+  case 21:
+#line 302 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "=", 0);
+						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "/", 0);
 					}
 #line 1647 "parser.tab.c" /* yacc.c:1646  */
     break;
 
-  case 24:
-#line 301 "parser.y" /* yacc.c:1646  */
+  case 22:
+#line 306 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "!=", 0);
+						(yyval.a) = newast("expression", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "%", 0);
 					}
 #line 1655 "parser.tab.c" /* yacc.c:1646  */
     break;
 
-  case 25:
-#line 305 "parser.y" /* yacc.c:1646  */
+  case 23:
+#line 313 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "<", 0);
+						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "=", 0);
 					}
 #line 1663 "parser.tab.c" /* yacc.c:1646  */
     break;
 
-  case 26:
-#line 309 "parser.y" /* yacc.c:1646  */
+  case 24:
+#line 317 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, ">", 0);
+						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "!=", 0);
 					}
 #line 1671 "parser.tab.c" /* yacc.c:1646  */
     break;
 
-  case 27:
-#line 313 "parser.y" /* yacc.c:1646  */
+  case 25:
+#line 321 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "<=", 0);
+						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "<", 0);
 					}
 #line 1679 "parser.tab.c" /* yacc.c:1646  */
     break;
 
-  case 28:
-#line 317 "parser.y" /* yacc.c:1646  */
+  case 26:
+#line 325 "parser.y" /* yacc.c:1646  */
     {
-						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, ">=", 0);
+						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, ">", 0);
 					}
 #line 1687 "parser.tab.c" /* yacc.c:1646  */
     break;
 
+  case 27:
+#line 329 "parser.y" /* yacc.c:1646  */
+    {
+						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, "<=", 0);
+					}
+#line 1695 "parser.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 28:
+#line 333 "parser.y" /* yacc.c:1646  */
+    {
+						(yyval.a) = newast("condition", (yyvsp[-2].a), (yyvsp[0].a), NULL, NULL, ">=", 0);
+					}
+#line 1703 "parser.tab.c" /* yacc.c:1646  */
+    break;
+
   case 29:
-#line 324 "parser.y" /* yacc.c:1646  */
+#line 340 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* num = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[0].number));
 						(yyval.a) = newast("value", num, NULL, NULL, NULL, "", 0);
 					}
-#line 1696 "parser.tab.c" /* yacc.c:1646  */
+#line 1712 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 329 "parser.y" /* yacc.c:1646  */
+#line 345 "parser.y" /* yacc.c:1646  */
     {
 						(yyval.a) = newast("value", (yyvsp[0].a), NULL, NULL, NULL, "", 0);
+						add_var_to_used((yyvsp[0].a)->s_1->value, lineno);
 					}
-#line 1704 "parser.tab.c" /* yacc.c:1646  */
+#line 1721 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 336 "parser.y" /* yacc.c:1646  */
+#line 353 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[0].string), 0);
 						(yyval.a) = newast("identifier_id", id, NULL, NULL, NULL, "", 0);
 					}
-#line 1713 "parser.tab.c" /* yacc.c:1646  */
+#line 1730 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 341 "parser.y" /* yacc.c:1646  */
+#line 358 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id1 = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-3].string), 0);
 						struct ast* id2 = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-1].string), 0);
 						(yyval.a) = newast("identifier_id_id", id1, id2, NULL, NULL, "", 0);
 					}
-#line 1723 "parser.tab.c" /* yacc.c:1646  */
+#line 1740 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 347 "parser.y" /* yacc.c:1646  */
+#line 364 "parser.y" /* yacc.c:1646  */
     {
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, (yyvsp[-3].string), 0);
 						struct ast* num = newast("num", NULL, NULL, NULL, NULL, "", (yyvsp[-1].number));
 						(yyval.a) = newast("identifier_id_num", id, num, NULL, NULL, "", 0);
 					}
-#line 1733 "parser.tab.c" /* yacc.c:1646  */
+#line 1750 "parser.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1737 "parser.tab.c" /* yacc.c:1646  */
+#line 1754 "parser.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1961,7 +1978,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 355 "parser.y" /* yacc.c:1906  */
+#line 372 "parser.y" /* yacc.c:1906  */
 
 
 
@@ -1970,7 +1987,7 @@ int main(int argc, char **argv) {
 	FILE *infile = fopen(argv[1], "r");
 
 	if (!infile) {
-		printf( "File not found.");
+		printf("Nie znaleziono pliku.\n");
 		return -1;
 	}
 
@@ -2012,6 +2029,94 @@ void get_next_iter(struct ast* ID_node, struct ast* value_node) {
 	codes.push_back(newindirect_code("@STORE", reg_B, iterator));
 }
 
+// DO OBSLUGI BLEDOW ITERATORA
+// sprawdza czy jest uzywany
+int was_initialized(string name) {
+	if(init_iterators.find(name) != init_iterators.end()) {
+		if(init_iterators[name] == 1) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+// ustawia iterator jako uzywany
+void init_iterator(string name) {
+	init_iterators[name] = 1;
+}
+
+// usuwa iterator / ustawia jako nie uzywany
+void del_iterator(string name) {
+	// vars[name] = -1;
+	// vars[name + "_END"] = -1;
+	init_iterators[name] = -1;
+}
+
+// zmienna jako iterator
+int is_variable(string name) {
+	if(declared_vars.find(name) != declared_vars.end()) {
+		if(declared_vars[name] == 1) {
+			return 1;
+		} else {
+			return 0;
+		}
+	} else {
+		return 0;
+	}
+}
+
+
+void add_var_to_used(string name, int line) {
+	if(used_variables.find(name) == used_variables.end()) {
+		used_variables[name] = line;
+	}
+}
+
+
+// sprawdzenie uzycia niezadeklarowanych zmiennych
+void check_not_declared_vars(struct ast* command_node) {
+	if(command_node->type.compare("identifier_id") == 0 || command_node->type.compare("identifier_id_num") == 0) {
+		if(declared_vars.find(command_node->s_1->value) == declared_vars.end() || declared_vars[command_node->s_1->value] != 1) {
+			// do poprawy sprawdzanie czy jest iteratorem
+			string err = "Użycie niezadeklarowanej zmiennej " + command_node->s_1->value + " - pierwsze wystąpienie w lini " + to_string(used_variables[command_node->s_1->value]);
+			yyerror(&err[0]);
+		}
+	} else if(command_node->type.compare("identifier_id_id") == 0) {
+		if(declared_vars.find(command_node->s_1->value) == declared_vars.end() || declared_vars[command_node->s_1->value] != 1) {
+			// do poprawy sprawdzanie czy jest iteratorem
+			string err = "Użycie niezadeklarowanej zmiennej " + command_node->s_1->value + " - pierwsze wystąpienie w lini " + to_string(used_variables[command_node->s_1->value]);
+			yyerror(&err[0]);
+		}
+		if(declared_vars.find(command_node->s_2->value) == declared_vars.end() || declared_vars[command_node->s_2->value] != 1) {
+			// do poprawy sprawdzanie czy jest iteratorem
+			string err = "Użycie niezadeklarowanej zmiennej " + command_node->s_2->value + " - pierwsze wystąpienie w lini " + to_string(used_variables[command_node->s_2->value]);
+			yyerror(&err[0]);
+		}
+	} else if(command_node->value.compare("for_to") == 0 || command_node->value.compare("for_downto") == 0) {
+		declared_vars[command_node->s_1->value] = 1;
+
+		check_not_declared_vars(command_node->s_2);
+		check_not_declared_vars(command_node->s_3);
+		check_not_declared_vars(command_node->s_4);
+
+		declared_vars[command_node->s_1->value] = -1;
+		// cout << "ITERATOR: " << command_node->s_1->value << " = " << declared_vars[command_node->s_1->value] << endl;
+	} else {
+		if(command_node->s_1 != NULL) {
+			check_not_declared_vars(command_node->s_1);
+		} 
+		if(command_node->s_2 != NULL) {
+			check_not_declared_vars(command_node->s_2);
+		} 
+		if(command_node->s_3 != NULL) {
+			check_not_declared_vars(command_node->s_3);
+		} 
+		if(command_node->s_4 != NULL) {
+			check_not_declared_vars(command_node->s_4);
+		}
+	}
+}
+
 // AST
 
 struct ast* newast(string type, struct ast* s_1, struct ast* s_2, struct ast* s_3, struct ast* s_4, string value, unsigned long long number) {
@@ -2032,6 +2137,36 @@ struct ast* newast(string type, struct ast* s_1, struct ast* s_2, struct ast* s_
 	a->number = number;
 
     return a;
+}
+
+void free_ast(struct ast* node) {
+	// cout << "START FREE :: type : " << node->type << endl;
+	if(node == NULL) {
+		return;
+	}
+	if(node->s_1 != NULL) {
+		free_ast(node->s_1);
+		node->s_1 = NULL;
+	}
+
+	if(node->s_2 != NULL) {
+		free_ast(node->s_2);
+		node->s_2 = NULL;
+	}
+	
+	if(node->s_3 != NULL) {
+		free_ast(node->s_3);
+		node->s_3 = NULL;
+	}
+	
+	if(node->s_4 != NULL) {
+		free_ast(node->s_4);
+		node->s_4 = NULL;
+	}
+	// node->type.clear();
+	// node->value.clear();
+	node->number = 0;
+	free(node);
 }
 
 // BLOCK
@@ -2165,7 +2300,7 @@ struct variable* newvariable(string label, string id1, string id2, unsigned long
 
 // ARRAY
 
-struct arr* newarray(string id, int from, int to, int mem_idx) {
+struct arr* newarray(string id, unsigned long long from, unsigned long long to, unsigned long long mem_idx) {
 	struct arr* a = (struct arr*)malloc(sizeof(struct arr));
 
 	if(!a) {
@@ -2185,19 +2320,21 @@ struct arr* newarray(string id, int from, int to, int mem_idx) {
 // HANDLERS
 void handle_program(struct ast* root_node) {
 	if(semantic_analyse(root_node) != 1) {
-		cout << "ERROR! SEMANTIC ANALYSIS" << endl;
+		cout << "Błąd podczas analizy semantycznej." << endl;
 		return;
 	}
 	handle_commands(root_node->s_2);
 
-	print_indirect_code();
+	free_ast(root_node);
 	gen_assembler();
+	print_indirect_code();
 	
 }
 
 int semantic_analyse(struct ast* root) {
 	// TODO
 	declare_variables(root->s_1);
+	check_not_declared_vars(root->s_2);
 
 	return 1;
 }
@@ -2209,27 +2346,29 @@ void declare_variables(struct ast* declarations) {
 	while(ptr != NULL) {
 		if(ptr->value.compare("dec_var") == 0) { // variable
 			// sprawdzenie czy juz zadeklarowana
-			if(vars.find(ptr->s_2->value) == vars.end() && arrays.find(ptr->s_2->value) == arrays.end()) {
+			if(declared_vars.find(ptr->s_2->value) == declared_vars.end()) { // && arrays.find(ptr->s_2->value) == arrays.end()) {
 				mem_id++;
 				iterator_id++;
+				declared_vars[ptr->s_2->value] = 1;
 
 			} else {
-				string err = "Variable " + ptr->s_2->value + " was already declared!";
+				string err = "Zmienna " + ptr->s_2->value + " zadeklarowana więcej niż raz.";
 				yyerror(&err[0]);
 			}
 
 		} else { // array
-			if(vars.find(ptr->s_2->value) == vars.end() && arrays.find(ptr->s_2->value) == arrays.end()) {
-				if(ptr->s_4->number > ptr->s_3->number) {
+			if(declared_vars.find(ptr->s_2->value) == declared_vars.end()) { // && arrays.find(ptr->s_2->value) == arrays.end()) {
+				if(ptr->s_4->number >= ptr->s_3->number) {
 					iterator_id += ptr->s_4->number - ptr->s_3->number + 1;
 					mem_id += ptr->s_4->number - ptr->s_3->number + 1;
+					declared_vars[ptr->s_2->value] = 1;
 
 				} else {
-					string err = "Wrong index values in " + ptr->s_2->value + " array!";
+					string err = "Błędne indeksowanie tablicy - " + ptr->s_2->value;
 					yyerror(&err[0]);
 				}
 			} else {
-				string err = "Variable " + ptr->s_2->value + " was already declared!";
+				string err = "Zmienna " + ptr->s_2->value + " zadeklarowana więcej niż raz.";
 				yyerror(&err[0]);
 			}
 		}
@@ -2242,12 +2381,13 @@ void declare_variables(struct ast* declarations) {
 		if(ptr->value.compare("dec_var") == 0) { // variable
 			mem_id--;
 			vars[ptr->s_2->value] = mem_id;
+			// declared_vars[ptr->s_2->value] = 1;
 
 		} else { // array
 					mem_id -= (ptr->s_4->number - ptr->s_3->number + 1);
 					struct arr* arr_obj = newarray(ptr->s_2->value, ptr->s_3->number, ptr->s_4->number, mem_id);
 					arrays[ptr->s_2->value] = arr_obj;
-
+					// declared_vars[ptr->s_2->value] = 1;
 		}
 
 		ptr = ptr->s_1;
@@ -2367,18 +2507,47 @@ void gen_add(struct indirect_code* code) {
 }
 
 void gen_store(struct indirect_code* code) {
-	int idx = 0;
+	unsigned long long idx = 0;
 	if(code->val2->label.compare("VAR") == 0 || code->val2->label.compare("ITER") == 0) {
+		if(vars.find(code->val2->id1) == vars.end()) {
+			string err = "Błędne użycie zmiennej tablicowej " + code->val2->id1;
+			yyerror(&err[0]);
+		}
+
 		idx = vars[code->val2->id1];
 		gen_const("A", idx);
 
+	// } else if(code->val2->label.compare("ITER") == 0) {
+		// if(was_initialized(code->val2->id1) == 1) {
+		// 	string err = "Niedozwolona zmiana wartości iteratora " + code->val2->id1;
+		// 	yyerror(&err[0]);
+		// } else {
+		// 	init_iterators[code->val2->id1] = 1;
+		// 	idx = vars[code->val2->id1];
+		// 	gen_const("A", idx);
+		// }
 	} else if(code->val2->label.compare("ARR") == 0){
+		if(arrays.find(code->val2->id1) == arrays.end()) {
+			string err = "Błędne użycie zmiennej " + code->val2->id1;
+			yyerror(&err[0]);
+		}
+
 		struct arr* a = arrays[code->val2->id1];
 		if(code->val2->id2.compare("") == 0) {
+			if(code->val2->number < a->from || code->val2->number > a->to) {
+				string err = "Odwołanie do elementu poza tablicą - " + a->id + "(" + to_string(code->val2->number) + "). Tablica " + a->id + " przyjmuje indeksy z przedziału [" + to_string(a->from) + ", " + to_string(a->to) + "]";
+				yyerror(&err[0]);
+			}
+
 			idx = code->val2->number - a->from + a->mem_idx;
 			gen_const("A", idx);
 		} else {
-			int a_idx = vars[code->val2->id2];
+			if(vars.find(code->val2->id2) == vars.end()) {
+				string err = "Błędne użycie zmiennej tablicowej " + code->val2->id2;
+				yyerror(&err[0]);
+			}
+
+			unsigned long long a_idx = vars[code->val2->id2];
 			gen_const("A", a_idx);
 			instructs.push_back("LOAD A");
 			linoleo++;
@@ -2408,18 +2577,38 @@ void gen_store(struct indirect_code* code) {
 }
 
 void gen_load(struct indirect_code* code) {
-	int idx = 0;
+	unsigned long long idx = 0;
 	if(code->val1->label.compare("VAR") == 0 || code->val1->label.compare("ITER") == 0) {
+		if(vars.find(code->val1->id1) == vars.end()) {
+			string err = "Błędne użycie zmiennej tablicowej " + code->val1->id1;
+			yyerror(&err[0]);
+		}
+
 		idx = vars[code->val1->id1];
 		gen_const("A", idx);
 
 	} else if(code->val1->label.compare("ARR") == 0){
+		if(arrays.find(code->val1->id1) == arrays.end()) {
+			string err = "Błędne użycie zmiennej " + code->val1->id1;
+			yyerror(&err[0]);
+		}
+
 		struct arr* a = arrays[code->val1->id1];
 		if(code->val1->id2.compare("") == 0) {
+			if(code->val1->number < a->from || code->val1->number > a->to) {
+				string err = "Odwołanie do elementu poza tablicą - " + a->id + "(" + to_string(code->val1->number) + "). Tablica " + a->id + " przyjmuje indeksy z przedziału [" + to_string(a->from) + ", " + to_string(a->to) + "]";
+				yyerror(&err[0]);
+			}
+
 			idx = code->val1->number - a->from + a->mem_idx;
 			gen_const("A", idx);
 		} else {
-			int a_idx = vars[code->val1->id2];
+			if(vars.find(code->val1->id2) == vars.end()) {
+				string err = "Błędne użycie zmiennej tablicowej " + code->val1->id2;
+				yyerror(&err[0]);
+			}
+
+			unsigned long long a_idx = vars[code->val1->id2];
 			gen_const("A", a_idx);
 			instructs.push_back("LOAD A");
 			linoleo++;
@@ -2449,7 +2638,7 @@ void gen_load(struct indirect_code* code) {
 	linoleo++;
 }
 
-void gen_const(string reg, int val) {
+void gen_const(string reg, unsigned long long val) {
 	vector<string> queue;
 
 	while(val > 0) {
@@ -2736,6 +2925,15 @@ void handle_do_while(struct ast* do_while_node) {
 }
 
 void handle_for_to(struct ast* for_to_node) {
+	if(was_initialized(for_to_node->s_1->value) == 1) {
+		string err = "Ponowne użycie iteratora " + for_to_node->s_1->value + " na wyższym poziomie pętli";
+		yyerror(&err[0]);
+	}
+	if(is_variable(for_to_node->s_1->value) == 1) {
+		string err = "Błędna nazwa iteratora - " + for_to_node->s_1->value + " istnieje jako zmienna";
+		yyerror(&err[0]);
+	}
+
 	// struct indirect_code* tmp_struct;
 	struct variable* end_label = get_next_label_id();
 	struct variable* label_0 = get_next_label_id();
@@ -2758,6 +2956,7 @@ void handle_for_to(struct ast* for_to_node) {
 	codes.push_back(label_0_code); // LABEL 0
 
 	// INICJALIZACJA PETLI
+	init_iterator(for_to_node->s_1->value);
 	get_next_iter(for_to_node->s_1, for_to_node->s_2); // i := a
 
 	// wartosc b jest caly czas w reg C
@@ -2793,9 +2992,20 @@ void handle_for_to(struct ast* for_to_node) {
 	codes.push_back(newindirect_code("@JUMP", loop_label, NULL));
 	codes.push_back(newindirect_code("@LABEL", end_label, NULL));
 	
+	del_iterator(for_to_node->s_1->value);
+	
 }
 
 void handle_for_downto(struct ast* for_to_node) {
+	if(was_initialized(for_to_node->s_1->value) == 1) {
+		string err = "Ponowne użycie iteratora " + for_to_node->s_1->value + " na wyższym poziomie pętli";
+		yyerror(&err[0]);
+	}
+	if(is_variable(for_to_node->s_1->value) == 1) {
+		string err = "Błędna nazwa iteratora - " + for_to_node->s_1->value + " istnieje jako zmienna";
+		yyerror(&err[0]);
+	}
+
 	struct variable* end_label = get_next_label_id();
 	struct variable* end_label1 = get_next_label_id();
 	struct variable* label_0 = get_next_label_id();
@@ -2819,6 +3029,7 @@ void handle_for_downto(struct ast* for_to_node) {
 	codes.push_back(label_0_code); // LABEL 0
 
 	// INICJALIZACJA PETLI
+	init_iterator(for_to_node->s_1->value);
 	get_next_iter(for_to_node->s_1, for_to_node->s_2); // i := a
 
 	// wartosc b jest caly czas w reg D
@@ -2857,11 +3068,19 @@ void handle_for_downto(struct ast* for_to_node) {
 	codes.push_back(newindirect_code("@LABEL", end_label, NULL));
 	codes.push_back(newindirect_code("@LABEL", end_label1, NULL));
 	codes.push_back(newindirect_code("@LABEL", lab2, NULL));
+	
+	del_iterator(for_to_node->s_1->value);
 
 }
 
 
 void handle_assign(struct ast* asg_node) {
+	if(asg_node->s_1->type.compare("identifier_id") == 0) {
+		if(was_initialized(asg_node->s_1->s_1->value) == 1) {
+			string err = "Niedozwolona zmiana wartości iteratora " + asg_node->s_1->s_1->value;
+			yyerror(&err[0]);
+		}
+	}
 
 	handle_expression(asg_node->s_2, "B");
 	handle_store(asg_node, "B");

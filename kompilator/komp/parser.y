@@ -19,27 +19,40 @@
 	ofstream outfile;
 
 // GLOBALS
-int label_id = 0;
-int iterator_id = 0;
-int linoleo = 0;
-// struct block* root;
+	int label_id = 0;
+	unsigned long long iterator_id = 0;
+	int linoleo = 0;
 
-map<string, string> jumps;
-vector<string> instructs;
+	map<string, string> jumps;
+	vector<string> instructs;
 
-vector<struct indirect_code*> codes;
+	vector<struct indirect_code*> codes;
 
-map<string, int> vars;
-map<string, struct arr*> arrays;
-map<string, int> labels;
+	map<string, int> vars;
+	map<string, struct arr*> arrays;
+	map<string, int> labels;
 
-struct variable* get_next_label_id();
-void get_next_iter(struct ast* ID_node, struct ast* value_node);
+	struct variable* get_next_label_id();
+	void get_next_iter(struct ast* ID_node, struct ast* value_node);
+
+	map<string, int> init_iterators;
+	map<string, int> declared_vars;
+	map<string, int> used_variables;
+
+	void add_var_to_used(string name, int line);
+
+	void check_not_declared_vars(struct ast* command_node);
+
+	int is_variable(string name);
+
+	int was_initialized(string name);
+	void init_iterator(string name);
+	void del_iterator(string name);
 
 
 // PRINTS
-void print_blocks(struct block* code_block);
-void print_indirect_code();
+	void print_blocks(struct block* code_block);
+	void print_indirect_code();
 
 // AST
 
@@ -54,6 +67,7 @@ void print_indirect_code();
 	};
 
 	struct ast* newast(string type, struct ast* s_1, struct ast* s_2, struct ast* s_3, struct ast* s_4, string value, unsigned long long number);
+	void free_ast(struct ast* node);
 
 // BLOCK
 	struct block {
@@ -86,12 +100,12 @@ void print_indirect_code();
 // ARRAY
 	struct arr {
 		string id;
-		int from;
-		int to;
-		int mem_idx;
+		unsigned long long from;
+		unsigned long long to;
+		unsigned long long mem_idx;
 	};
 
-	struct arr* newarray(string id, int from, int to, int mem_idx);
+	struct arr* newarray(string id, unsigned long long from, unsigned long long to, unsigned long long mem_idx);
 
 // HANDLERS
 
@@ -139,7 +153,7 @@ void print_indirect_code();
 
 	void gen_load(struct indirect_code* code);
 	void gen_store(struct indirect_code* code);
-	void gen_const(string reg, int val);
+	void gen_const(string reg, unsigned long long val);
 	void gen_add(struct indirect_code* code);
 	void gen_sub(struct indirect_code* code);
 	void gen_dec(struct indirect_code* code);
@@ -199,6 +213,7 @@ declarations:
 					{
 						struct ast* id = newast("id", NULL, NULL, NULL, NULL, $2, 0);
 						$$ = newast("declarations", $1, id, NULL, NULL, "dec_var", 0);
+						// declared_vars[$2] = 1;
 					}
 |	declarations ID'('NUM':'NUM')'';'
 					{
@@ -206,6 +221,7 @@ declarations:
 						struct ast* num1 = newast("num", NULL, NULL, NULL, NULL, "", $4);
 						struct ast* num2 = newast("num", NULL, NULL, NULL, NULL, "", $6);
 						$$ = newast("declarations", $1, id, num1, num2, "dec_arr", 0);
+						// declared_vars[$2] = 1;
 					}
 | 					{
 						$$ = NULL;
@@ -328,6 +344,7 @@ value:
 |	identifier
 					{
 						$$ = newast("value", $1, NULL, NULL, NULL, "", 0);
+						add_var_to_used($1->s_1->value, lineno);
 					}
 ;
 
@@ -360,7 +377,7 @@ int main(int argc, char **argv) {
 	FILE *infile = fopen(argv[1], "r");
 
 	if (!infile) {
-		printf( "File not found.");
+		printf("Nie znaleziono pliku.\n");
 		return -1;
 	}
 
@@ -402,6 +419,94 @@ void get_next_iter(struct ast* ID_node, struct ast* value_node) {
 	codes.push_back(newindirect_code("@STORE", reg_B, iterator));
 }
 
+// DO OBSLUGI BLEDOW ITERATORA
+// sprawdza czy jest uzywany
+int was_initialized(string name) {
+	if(init_iterators.find(name) != init_iterators.end()) {
+		if(init_iterators[name] == 1) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+// ustawia iterator jako uzywany
+void init_iterator(string name) {
+	init_iterators[name] = 1;
+}
+
+// usuwa iterator / ustawia jako nie uzywany
+void del_iterator(string name) {
+	// vars[name] = -1;
+	// vars[name + "_END"] = -1;
+	init_iterators[name] = -1;
+}
+
+// zmienna jako iterator
+int is_variable(string name) {
+	if(declared_vars.find(name) != declared_vars.end()) {
+		if(declared_vars[name] == 1) {
+			return 1;
+		} else {
+			return 0;
+		}
+	} else {
+		return 0;
+	}
+}
+
+
+void add_var_to_used(string name, int line) {
+	if(used_variables.find(name) == used_variables.end()) {
+		used_variables[name] = line;
+	}
+}
+
+
+// sprawdzenie uzycia niezadeklarowanych zmiennych
+void check_not_declared_vars(struct ast* command_node) {
+	if(command_node->type.compare("identifier_id") == 0 || command_node->type.compare("identifier_id_num") == 0) {
+		if(declared_vars.find(command_node->s_1->value) == declared_vars.end() || declared_vars[command_node->s_1->value] != 1) {
+			// do poprawy sprawdzanie czy jest iteratorem
+			string err = "Użycie niezadeklarowanej zmiennej " + command_node->s_1->value + " - pierwsze wystąpienie w lini " + to_string(used_variables[command_node->s_1->value]);
+			yyerror(&err[0]);
+		}
+	} else if(command_node->type.compare("identifier_id_id") == 0) {
+		if(declared_vars.find(command_node->s_1->value) == declared_vars.end() || declared_vars[command_node->s_1->value] != 1) {
+			// do poprawy sprawdzanie czy jest iteratorem
+			string err = "Użycie niezadeklarowanej zmiennej " + command_node->s_1->value + " - pierwsze wystąpienie w lini " + to_string(used_variables[command_node->s_1->value]);
+			yyerror(&err[0]);
+		}
+		if(declared_vars.find(command_node->s_2->value) == declared_vars.end() || declared_vars[command_node->s_2->value] != 1) {
+			// do poprawy sprawdzanie czy jest iteratorem
+			string err = "Użycie niezadeklarowanej zmiennej " + command_node->s_2->value + " - pierwsze wystąpienie w lini " + to_string(used_variables[command_node->s_2->value]);
+			yyerror(&err[0]);
+		}
+	} else if(command_node->value.compare("for_to") == 0 || command_node->value.compare("for_downto") == 0) {
+		declared_vars[command_node->s_1->value] = 1;
+
+		check_not_declared_vars(command_node->s_2);
+		check_not_declared_vars(command_node->s_3);
+		check_not_declared_vars(command_node->s_4);
+
+		declared_vars[command_node->s_1->value] = -1;
+		// cout << "ITERATOR: " << command_node->s_1->value << " = " << declared_vars[command_node->s_1->value] << endl;
+	} else {
+		if(command_node->s_1 != NULL) {
+			check_not_declared_vars(command_node->s_1);
+		} 
+		if(command_node->s_2 != NULL) {
+			check_not_declared_vars(command_node->s_2);
+		} 
+		if(command_node->s_3 != NULL) {
+			check_not_declared_vars(command_node->s_3);
+		} 
+		if(command_node->s_4 != NULL) {
+			check_not_declared_vars(command_node->s_4);
+		}
+	}
+}
+
 // AST
 
 struct ast* newast(string type, struct ast* s_1, struct ast* s_2, struct ast* s_3, struct ast* s_4, string value, unsigned long long number) {
@@ -422,6 +527,36 @@ struct ast* newast(string type, struct ast* s_1, struct ast* s_2, struct ast* s_
 	a->number = number;
 
     return a;
+}
+
+void free_ast(struct ast* node) {
+	// cout << "START FREE :: type : " << node->type << endl;
+	if(node == NULL) {
+		return;
+	}
+	if(node->s_1 != NULL) {
+		free_ast(node->s_1);
+		node->s_1 = NULL;
+	}
+
+	if(node->s_2 != NULL) {
+		free_ast(node->s_2);
+		node->s_2 = NULL;
+	}
+	
+	if(node->s_3 != NULL) {
+		free_ast(node->s_3);
+		node->s_3 = NULL;
+	}
+	
+	if(node->s_4 != NULL) {
+		free_ast(node->s_4);
+		node->s_4 = NULL;
+	}
+	// node->type.clear();
+	// node->value.clear();
+	node->number = 0;
+	free(node);
 }
 
 // BLOCK
@@ -555,7 +690,7 @@ struct variable* newvariable(string label, string id1, string id2, unsigned long
 
 // ARRAY
 
-struct arr* newarray(string id, int from, int to, int mem_idx) {
+struct arr* newarray(string id, unsigned long long from, unsigned long long to, unsigned long long mem_idx) {
 	struct arr* a = (struct arr*)malloc(sizeof(struct arr));
 
 	if(!a) {
@@ -575,19 +710,21 @@ struct arr* newarray(string id, int from, int to, int mem_idx) {
 // HANDLERS
 void handle_program(struct ast* root_node) {
 	if(semantic_analyse(root_node) != 1) {
-		cout << "ERROR! SEMANTIC ANALYSIS" << endl;
+		cout << "Błąd podczas analizy semantycznej." << endl;
 		return;
 	}
 	handle_commands(root_node->s_2);
 
-	print_indirect_code();
+	free_ast(root_node);
 	gen_assembler();
+	print_indirect_code();
 	
 }
 
 int semantic_analyse(struct ast* root) {
 	// TODO
 	declare_variables(root->s_1);
+	check_not_declared_vars(root->s_2);
 
 	return 1;
 }
@@ -599,27 +736,29 @@ void declare_variables(struct ast* declarations) {
 	while(ptr != NULL) {
 		if(ptr->value.compare("dec_var") == 0) { // variable
 			// sprawdzenie czy juz zadeklarowana
-			if(vars.find(ptr->s_2->value) == vars.end() && arrays.find(ptr->s_2->value) == arrays.end()) {
+			if(declared_vars.find(ptr->s_2->value) == declared_vars.end()) { // && arrays.find(ptr->s_2->value) == arrays.end()) {
 				mem_id++;
 				iterator_id++;
+				declared_vars[ptr->s_2->value] = 1;
 
 			} else {
-				string err = "Variable " + ptr->s_2->value + " was already declared!";
+				string err = "Zmienna " + ptr->s_2->value + " zadeklarowana więcej niż raz.";
 				yyerror(&err[0]);
 			}
 
 		} else { // array
-			if(vars.find(ptr->s_2->value) == vars.end() && arrays.find(ptr->s_2->value) == arrays.end()) {
-				if(ptr->s_4->number > ptr->s_3->number) {
+			if(declared_vars.find(ptr->s_2->value) == declared_vars.end()) { // && arrays.find(ptr->s_2->value) == arrays.end()) {
+				if(ptr->s_4->number >= ptr->s_3->number) {
 					iterator_id += ptr->s_4->number - ptr->s_3->number + 1;
 					mem_id += ptr->s_4->number - ptr->s_3->number + 1;
+					declared_vars[ptr->s_2->value] = 1;
 
 				} else {
-					string err = "Wrong index values in " + ptr->s_2->value + " array!";
+					string err = "Błędne indeksowanie tablicy - " + ptr->s_2->value;
 					yyerror(&err[0]);
 				}
 			} else {
-				string err = "Variable " + ptr->s_2->value + " was already declared!";
+				string err = "Zmienna " + ptr->s_2->value + " zadeklarowana więcej niż raz.";
 				yyerror(&err[0]);
 			}
 		}
@@ -632,12 +771,13 @@ void declare_variables(struct ast* declarations) {
 		if(ptr->value.compare("dec_var") == 0) { // variable
 			mem_id--;
 			vars[ptr->s_2->value] = mem_id;
+			// declared_vars[ptr->s_2->value] = 1;
 
 		} else { // array
 					mem_id -= (ptr->s_4->number - ptr->s_3->number + 1);
 					struct arr* arr_obj = newarray(ptr->s_2->value, ptr->s_3->number, ptr->s_4->number, mem_id);
 					arrays[ptr->s_2->value] = arr_obj;
-
+					// declared_vars[ptr->s_2->value] = 1;
 		}
 
 		ptr = ptr->s_1;
@@ -757,18 +897,47 @@ void gen_add(struct indirect_code* code) {
 }
 
 void gen_store(struct indirect_code* code) {
-	int idx = 0;
+	unsigned long long idx = 0;
 	if(code->val2->label.compare("VAR") == 0 || code->val2->label.compare("ITER") == 0) {
+		if(vars.find(code->val2->id1) == vars.end()) {
+			string err = "Błędne użycie zmiennej tablicowej " + code->val2->id1;
+			yyerror(&err[0]);
+		}
+
 		idx = vars[code->val2->id1];
 		gen_const("A", idx);
 
+	// } else if(code->val2->label.compare("ITER") == 0) {
+		// if(was_initialized(code->val2->id1) == 1) {
+		// 	string err = "Niedozwolona zmiana wartości iteratora " + code->val2->id1;
+		// 	yyerror(&err[0]);
+		// } else {
+		// 	init_iterators[code->val2->id1] = 1;
+		// 	idx = vars[code->val2->id1];
+		// 	gen_const("A", idx);
+		// }
 	} else if(code->val2->label.compare("ARR") == 0){
+		if(arrays.find(code->val2->id1) == arrays.end()) {
+			string err = "Błędne użycie zmiennej " + code->val2->id1;
+			yyerror(&err[0]);
+		}
+
 		struct arr* a = arrays[code->val2->id1];
 		if(code->val2->id2.compare("") == 0) {
+			if(code->val2->number < a->from || code->val2->number > a->to) {
+				string err = "Odwołanie do elementu poza tablicą - " + a->id + "(" + to_string(code->val2->number) + "). Tablica " + a->id + " przyjmuje indeksy z przedziału [" + to_string(a->from) + ", " + to_string(a->to) + "]";
+				yyerror(&err[0]);
+			}
+
 			idx = code->val2->number - a->from + a->mem_idx;
 			gen_const("A", idx);
 		} else {
-			int a_idx = vars[code->val2->id2];
+			if(vars.find(code->val2->id2) == vars.end()) {
+				string err = "Błędne użycie zmiennej tablicowej " + code->val2->id2;
+				yyerror(&err[0]);
+			}
+
+			unsigned long long a_idx = vars[code->val2->id2];
 			gen_const("A", a_idx);
 			instructs.push_back("LOAD A");
 			linoleo++;
@@ -798,18 +967,38 @@ void gen_store(struct indirect_code* code) {
 }
 
 void gen_load(struct indirect_code* code) {
-	int idx = 0;
+	unsigned long long idx = 0;
 	if(code->val1->label.compare("VAR") == 0 || code->val1->label.compare("ITER") == 0) {
+		if(vars.find(code->val1->id1) == vars.end()) {
+			string err = "Błędne użycie zmiennej tablicowej " + code->val1->id1;
+			yyerror(&err[0]);
+		}
+
 		idx = vars[code->val1->id1];
 		gen_const("A", idx);
 
 	} else if(code->val1->label.compare("ARR") == 0){
+		if(arrays.find(code->val1->id1) == arrays.end()) {
+			string err = "Błędne użycie zmiennej " + code->val1->id1;
+			yyerror(&err[0]);
+		}
+
 		struct arr* a = arrays[code->val1->id1];
 		if(code->val1->id2.compare("") == 0) {
+			if(code->val1->number < a->from || code->val1->number > a->to) {
+				string err = "Odwołanie do elementu poza tablicą - " + a->id + "(" + to_string(code->val1->number) + "). Tablica " + a->id + " przyjmuje indeksy z przedziału [" + to_string(a->from) + ", " + to_string(a->to) + "]";
+				yyerror(&err[0]);
+			}
+
 			idx = code->val1->number - a->from + a->mem_idx;
 			gen_const("A", idx);
 		} else {
-			int a_idx = vars[code->val1->id2];
+			if(vars.find(code->val1->id2) == vars.end()) {
+				string err = "Błędne użycie zmiennej tablicowej " + code->val1->id2;
+				yyerror(&err[0]);
+			}
+
+			unsigned long long a_idx = vars[code->val1->id2];
 			gen_const("A", a_idx);
 			instructs.push_back("LOAD A");
 			linoleo++;
@@ -839,7 +1028,7 @@ void gen_load(struct indirect_code* code) {
 	linoleo++;
 }
 
-void gen_const(string reg, int val) {
+void gen_const(string reg, unsigned long long val) {
 	vector<string> queue;
 
 	while(val > 0) {
@@ -1126,6 +1315,15 @@ void handle_do_while(struct ast* do_while_node) {
 }
 
 void handle_for_to(struct ast* for_to_node) {
+	if(was_initialized(for_to_node->s_1->value) == 1) {
+		string err = "Ponowne użycie iteratora " + for_to_node->s_1->value + " na wyższym poziomie pętli";
+		yyerror(&err[0]);
+	}
+	if(is_variable(for_to_node->s_1->value) == 1) {
+		string err = "Błędna nazwa iteratora - " + for_to_node->s_1->value + " istnieje jako zmienna";
+		yyerror(&err[0]);
+	}
+
 	// struct indirect_code* tmp_struct;
 	struct variable* end_label = get_next_label_id();
 	struct variable* label_0 = get_next_label_id();
@@ -1148,6 +1346,7 @@ void handle_for_to(struct ast* for_to_node) {
 	codes.push_back(label_0_code); // LABEL 0
 
 	// INICJALIZACJA PETLI
+	init_iterator(for_to_node->s_1->value);
 	get_next_iter(for_to_node->s_1, for_to_node->s_2); // i := a
 
 	// wartosc b jest caly czas w reg C
@@ -1183,9 +1382,20 @@ void handle_for_to(struct ast* for_to_node) {
 	codes.push_back(newindirect_code("@JUMP", loop_label, NULL));
 	codes.push_back(newindirect_code("@LABEL", end_label, NULL));
 	
+	del_iterator(for_to_node->s_1->value);
+	
 }
 
 void handle_for_downto(struct ast* for_to_node) {
+	if(was_initialized(for_to_node->s_1->value) == 1) {
+		string err = "Ponowne użycie iteratora " + for_to_node->s_1->value + " na wyższym poziomie pętli";
+		yyerror(&err[0]);
+	}
+	if(is_variable(for_to_node->s_1->value) == 1) {
+		string err = "Błędna nazwa iteratora - " + for_to_node->s_1->value + " istnieje jako zmienna";
+		yyerror(&err[0]);
+	}
+
 	struct variable* end_label = get_next_label_id();
 	struct variable* end_label1 = get_next_label_id();
 	struct variable* label_0 = get_next_label_id();
@@ -1209,6 +1419,7 @@ void handle_for_downto(struct ast* for_to_node) {
 	codes.push_back(label_0_code); // LABEL 0
 
 	// INICJALIZACJA PETLI
+	init_iterator(for_to_node->s_1->value);
 	get_next_iter(for_to_node->s_1, for_to_node->s_2); // i := a
 
 	// wartosc b jest caly czas w reg D
@@ -1247,11 +1458,19 @@ void handle_for_downto(struct ast* for_to_node) {
 	codes.push_back(newindirect_code("@LABEL", end_label, NULL));
 	codes.push_back(newindirect_code("@LABEL", end_label1, NULL));
 	codes.push_back(newindirect_code("@LABEL", lab2, NULL));
+	
+	del_iterator(for_to_node->s_1->value);
 
 }
 
 
 void handle_assign(struct ast* asg_node) {
+	if(asg_node->s_1->type.compare("identifier_id") == 0) {
+		if(was_initialized(asg_node->s_1->s_1->value) == 1) {
+			string err = "Niedozwolona zmiana wartości iteratora " + asg_node->s_1->s_1->value;
+			yyerror(&err[0]);
+		}
+	}
 
 	handle_expression(asg_node->s_2, "B");
 	handle_store(asg_node, "B");
