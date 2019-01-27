@@ -64,15 +64,6 @@ void print_indirect_code(struct indirect_code* code);
 
 	struct ast* newast(string type, struct ast* s_1, struct ast* s_2, struct ast* s_3, struct ast* s_4, string value, unsigned long long number);
 
-// BLOCK
-	struct block {
-		struct block* prev;
-		struct block* next;
-		vector<struct indirect_code*> codes;
-	};
-
-	struct block* newblock();
-
 // INDIRECT CODE
 	struct indirect_code { // ADD <var> <var>
 		string kw; // keyword eg. ADD, JZERO

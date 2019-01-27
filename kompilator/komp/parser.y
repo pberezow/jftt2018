@@ -54,18 +54,19 @@
 	void init_iterator(string name);
 	void del_iterator(string name);
 
+	string reg_g = "";
+
 
 // PRINTS
-	void print_blocks(struct block* code_block);
 	void print_indirect_code();
 
-struct lex_token {
-	string str;
-	unsigned long long number;
-	int lineno;
-};
+	struct lex_token {
+		string str;
+		unsigned long long number;
+		int lineno;
+	};
 
-struct lex_token* newlex_token(string str, unsigned long long number, int lineno);
+	struct lex_token* newlex_token(string str, unsigned long long number, int lineno);
 
 // AST
 
@@ -82,15 +83,6 @@ struct lex_token* newlex_token(string str, unsigned long long number, int lineno
 
 	struct ast* newast(string type, struct ast* s_1, struct ast* s_2, struct ast* s_3, struct ast* s_4, string value, unsigned long long number, int lineno);
 	void free_ast(struct ast* node);
-
-// BLOCK
-	struct block {
-		struct block* prev;
-		struct block* next;
-		vector<struct indirect_code*> codes;
-	};
-
-	struct block* newblock();
 
 // INDIRECT CODE
 	struct indirect_code { // ADD <var> <var>
@@ -396,19 +388,17 @@ int main(int argc, char **argv) {
 		return -1;
 	}
 
-	// ofstream outfile;
   	outfile.open(argv[2]);
 
 	yyin = infile;
 	yyparse();
 
-    // printf("Kompilacja zakonczona.\n");
 	outfile.close();
 	return 0;
 }
 
 void yyerror(char const *s){
-	fprintf(stderr, "%s.\n", s);
+	fprintf(stderr, "\x1B[31m%s.\x1B[0m\n", s);
 	exit(1);
 }
 
@@ -616,7 +606,6 @@ struct ast* newast(string type, struct ast* s_1, struct ast* s_2, struct ast* s_
 }
 
 void free_ast(struct ast* node) {
-	// cout << "START FREE :: type : " << node->type << endl;
 	if(node == NULL) {
 		return;
 	}
@@ -639,44 +628,8 @@ void free_ast(struct ast* node) {
 		free_ast(node->s_4);
 		node->s_4 = NULL;
 	}
-	// node->type.clear();
-	// node->value.clear();
 	node->number = 0;
 	free(node);
-}
-
-// BLOCK
-
-struct block* newblock() {
-	struct block* a = (struct block*)malloc(sizeof(struct block));
-	
-	if(!a) {
-		yyerror("Błąd. Koniec pamięci\n");
-        exit(1);
-	}
-
-
-	a->prev = NULL;
-	a->next = NULL;
-
-	cout <<"SIZE " << a << endl;
-	return a;
-}
-
-void print_blocks(struct block* code_block) {
-	// struct block* tmp = code_block;
-
-	// do {
-	// 	cout << "--------BLOCK--------" << endl;
-	// 	for(int i = 0; i < tmp->codes.size(); i++) {
-	// 		print_indirect_code(tmp->codes[i]);
-	// 	}
-	// 	tmp = tmp->next;
-	// } while(tmp->next != NULL);
-	// cout << "--------BLOCK--------" << endl;
-	// for(int i = 0; i < tmp->codes.size(); i++) {
-	// 	print_indirect_code(tmp->codes[i]);
-	// }
 }
 
 // INDIRECT CODE
@@ -994,15 +947,6 @@ void gen_store(struct indirect_code* code) {
 		idx = vars[code->val2->id1];
 		gen_const("A", idx);
 
-	// } else if(code->val2->label.compare("ITER") == 0) {
-		// if(was_initialized(code->val2->id1) == 1) {
-		// 	string err = "Niedozwolona zmiana wartości iteratora " + code->val2->id1;
-		// 	yyerror(&err[0]);
-		// } else {
-		// 	init_iterators[code->val2->id1] = 1;
-		// 	idx = vars[code->val2->id1];
-		// 	gen_const("A", idx);
-		// }
 	} else if(code->val2->label.compare("ARR") == 0){
 		if(arrays.find(code->val2->id1) == arrays.end()) {
 			string err = "Błędne użycie zmiennej " + code->val2->id1;
@@ -1037,12 +981,7 @@ void gen_store(struct indirect_code* code) {
 				instructs.push_back("SUB A H");
 				linoleo++;
 			}
-			// gen_const("H", a->mem_idx);
-			// instructs.push_back("ADD A H");
-			// linoleo++;
-			// gen_const("H", a->from);
-			// instructs.push_back("SUB A H");
-			// linoleo++;
+
 		}
 
 	} else {
@@ -1098,12 +1037,7 @@ void gen_load(struct indirect_code* code) {
 				instructs.push_back("SUB A H");
 				linoleo++;	
 			}
-			// gen_const("H", a->mem_idx);
-			// instructs.push_back("ADD A H");
-			// linoleo++;
-			// gen_const("H", a->from);
-			// instructs.push_back("SUB A H");
-			// linoleo++;
+
 		}
 
 	} else {
@@ -1638,7 +1572,6 @@ void handle_expression(struct ast* exp_node, string result_reg) {
 			codes.push_back(newindirect_code("SUB", reg1, reg1));
 			handle_value(exp_node->s_2, reg3->id1);
 			
-			cout << "REG# - D :  " << reg3->id1 << endl;
 			codes.push_back(newindirect_code("@JZERO", reg3, lab7)); // dzielenie przez 0
 			handle_value(exp_node->s_1, reg2->id1);
 

@@ -9,6 +9,7 @@ IN
         FOR k FROM 3 TO 4 DO
             WRITE k;
         ENDFOR
+        READ k;
         WRITE sito(j);
         WRITE 11111111;
     ENDFOR
