@@ -1,0 +1,166 @@
+\documentclass{article}
+\title{Lista 3, zadanie 8}
+\author{Piotr Berezowski, 236749}
+
+\usepackage{polski}
+\usepackage[utf8]{inputenc}
+\usepackage{enumerate}
+\usepackage{amssymb}
+
+\begin{document}
+	\maketitle
+	\pagenumbering{gobble}
+	\newpage
+	\pagenumbering{arabic}
+	
+	\section{Treść zadania}
+
+    Znaleźć DFA o minimalnej liczbie stanów równoważny automatowi
+
+    $$ M = (\{a, b, c, d, e, f, g, h\}, \{0, 1\}, \delta, a, \{d\}), $$
+
+    gdzie $\delta$ ma postać 
+
+    \begin{table}[h!]
+		\begin{center}
+			\begin{tabular}{c||c|c}
+				& \textbf{0} & \textbf{1} \\
+                \hline
+                \hline
+                \textbf{a} & b & a \\
+                \hline
+                \textbf{b} & a & c \\
+                \hline
+                \textbf{c} & d & b \\
+                \hline
+                \textbf{d} & d & a \\
+                \hline
+                \textbf{e} & d & f \\
+                \hline
+                \textbf{f} & g & e \\
+                \hline
+                \textbf{g} & f & g \\
+                \hline
+                \textbf{h} & g & d \\
+			\end{tabular}
+		\end{center}
+	\end{table}
+
+    \section{Rozwiązanie}
+
+    Automat $M$ to piątka postaci $(Q, \Sigma, \delta, q_0, F)$, gdzie:
+    
+    \begin{enumerate}
+        \item $Q$ - skończony zbiór stanów
+        \item $\Sigma$ - skończony alfabet
+        \item $\delta$ - funkcja przejścia $Q \times \Sigma \rightarrow Q$
+        \item $q_0$ - stan początkowy
+        \item $F$ - zbiór stanów akceptujących
+    \end{enumerate}
+
+    Rozwiązanie polega na zastosowaniu algorytmu minimalizacji. Kroki algorytmu:
+
+    \begin{flushleft}
+        $\textbf{forall } p \in F \wedge q \in Q \setminus F \textbf{ do:}$\break
+        $|\quad \textnormal{oznacz parę } (p, q)$\break
+        $\textbf{endfor}$\break
+        $\textbf{forall } p, q \in (F \times F) \cup (Q \setminus F \times Q \setminus F) \textbf{ do:}$\break
+        $|\quad \textbf{if } \exists_{a \in \Sigma} \textnormal{ t. że } (\delta(p, a), \delta(q, a)) \textnormal{ jest oznaczona } \textbf{ then:}$\break
+        $|\quad |\quad \textnormal{oznacz }(p, q)$\break
+        $|\quad |\quad \textnormal{oznacz rekurencyjnie wszystkie nieoznaczone pary na liście } (p, q)$\break
+        $|\quad \textbf{else:}$\break
+        $|\quad |\quad \textbf{forall } a \in \Sigma \textbf{ do:}$\break
+        $|\quad |\quad |\quad \textnormal{umieść parę } (p, q) \textnormal{ na liście } (\delta(p, a), \delta(q, a)), \textnormal{ o ile } \delta(p, a) \neq \delta(q, a)$\break
+        $|\quad |\quad \textbf{endfor}$\break
+        $|\quad \textbf{endif}$\break
+        $\textbf{endfor}$\break
+    \end{flushleft}
+
+    Zaczynamy od zapisania tablicy zawierającej jedną pozycję dla każdej pary stanów.
+
+    \begin{table}[h!]
+        \begin{tabular}{cccccccc}
+        b                      & c                     & d                     & e                     & f                     & g                     & h                     &   \\ \cline{1-7}
+        \multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & a \\ \cline{1-7}
+        \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & b \\ \cline{2-7}
+                               & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & c \\ \cline{3-7}
+                               &                       & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & d \\ \cline{4-7}
+                               &                       &                       & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & e \\ \cline{5-7}
+                               &                       &                       &                       & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & f \\ \cline{6-7}
+                               &                       &                       &                       &                       & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & g \\ \cline{7-7}
+        \end{tabular}
+    \end{table}
+
+    Następnie oznaczamy pary $(p, q)$ takie, że $p \in F \wedge q \in Q \setminus F$.
+
+    \begin{table}[h!]
+        \begin{tabular}{cccccccc}
+        b                      & c                     & d                      & e                      & f                      & g                      & h                      &   \\ \cline{1-7}
+        \multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{X} & \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{}  & a \\ \cline{1-7}
+        \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{X} & \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{}  & b \\ \cline{2-7}
+                               & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{X} & \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{}  & c \\ \cline{3-7}
+                               &                       & \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{X} & \multicolumn{1}{c|}{X} & \multicolumn{1}{c|}{X} & \multicolumn{1}{c|}{X} & d \\ \cline{4-7}
+                               &                       &                        & \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{}  & e \\ \cline{5-7}
+                               &                       &                        &                        & \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{}  & f \\ \cline{6-7}
+                               &                       &                        &                        &                        & \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{}  & g \\ \cline{7-7}
+        \end{tabular}
+    \end{table}
+
+    Wykonując drugi krok algorytmu oznaczamy kolejne pary.
+
+    \begin{enumerate}
+        \item $(a,b) \rightarrow^0 (b, a)$ - para $(b, a)$ nie jest oznaczona, więc sprawdzamy dalej.
+        \item $(a,b) \rightarrow^1 (a, c)$ - para $(a, c)$ nie jest oznaczona, więc sprawdzamy dalej.
+        \item $(a,c) \rightarrow^0 (b, d)$ - para $(b, d)$ jest oznaczona, więc oznaczamy $(a, c)$. Następnie sprawdzamy czy wcześniej 
+            po prawej stronie nie pojawiła się gdzieś nowo oznaczona para $(a, c)$, Jeśli tak, to oznaczamy lewą stronę i rekurencyjnie 
+            wykonujemy sprawdzenie dla nowej pary(lewej strony). W tym wypadku wcześniej było $(a,b) \rightarrow^1 (a, c)$, więc 
+            oznaczamy $(a, b)$ i sprawdzamy czy $(a, b)$ nie pojawiło się wcześniej po prawej stronie. Nie pojawiło się, więc możemy iść dalej.
+        \item $(a,e) \rightarrow^0 (b, d)$ - para $(b, d)$ jest oznaczona, więz oznaczamy $(a, e)$.
+        \item $(a,f) \rightarrow^0 (b, g)$ - para $(b, g)$ nie jest oznaczona, więc sprawdzamy dalej.
+        \item $(a,f) \rightarrow^1 (a, e)$ - para $(a, e)$ jest oznaczona, więc oznaczamy $(a, f)$.
+        \item $(a,g) \rightarrow^0 (b, f)$ - para $(b, f)$ nie jest oznaczona, więc sprawdzamy dalej.
+        \item $(a,g) \rightarrow^1 (a, g)$ - para $(a, g)$ nie jest oznaczona, więc sprawdzamy dalej.
+        \item $(a,h) \rightarrow^0 (b, g)$ - para $(b, g)$ nie jest oznaczona, więc sprawdzamy dalej.
+        \item $(a,h) \rightarrow^1 (a, d)$ - para $(a, d)$ jest oznaczona, więc oznaczamy $(a, h)$.
+        \item $(b,c) \rightarrow^0 (a, d)$ - para $(a, d)$ jest oznaczona, więc oznaczamy $(b, c)$.
+        \item $(b,e) \rightarrow^0 (a, d)$ - para $(a, d)$ jest oznaczona, więc oznaczamy $(b, e)$.
+        \item $(b,f) \rightarrow^0 (a, g)$ - para $(a, g)$ nie jest oznaczona, więc sprawdzamy dalej.
+        \item $(b,f) \rightarrow^1 (c, e)$ - para $(c, e)$ nie jest oznaczona, więc sprawdzamy dalej.
+        \item $(b,g) \rightarrow^0 (a, f)$ - para $(a, f)$ jest oznaczona, więc oznaczamy $(b, g)$.
+        \item $(b,h) \rightarrow^0 (a, g)$ - para $(a, g)$ nie jest oznaczona, więc sprawdzamy dalej.
+        \item $(b,h) \rightarrow^1 (c, d)$ - para $(c, d)$ jest oznaczona, więc oznaczamy $(b, h)$.
+        \item $(c,e) \rightarrow^0 (d, d)$ - para $(d, d)$ nie jest oznaczona, więc sprawdzamy dalej.
+        \item $(c,e) \rightarrow^1 (b, f)$ - para $(b, f)$ nie jest oznaczona, więc sprawdzamy dalej.
+        \item $(c,f) \rightarrow^0 (d, g)$ - para $(d, g)$ jest oznaczona, więc oznaczamy $(c, f)$.
+        \item $(c,g) \rightarrow^0 (d, f)$ - para $(d, f)$ jest oznaczona, więc oznaczamy $(c, g)$.
+        \item $(c,h) \rightarrow^0 (d, g)$ - para $(d, g)$ jest oznaczona, więc oznaczamy $(c, h)$.
+        \item $(e,f) \rightarrow^0 (d, g)$ - para $(d, g)$ jest oznaczona, więc oznaczamy $(e, f)$.
+        \item $(e,g) \rightarrow^0 (d, f)$ - para $(d, f)$ jest oznaczona, więc oznaczamy $(e, g)$.
+        \item $(e,h) \rightarrow^0 (d, g)$ - para $(d, g)$ jest oznaczona, więc oznaczamy $(e, h)$.
+        \item $(f,g) \rightarrow^0 (g, f)$ - para $(g, f)$ nie jest oznaczona, więc sprawdzamy dalej.
+        \item $(f,g) \rightarrow^1 (e, g)$ - para $(e, g)$ jest oznaczona, więc oznaczamy $(f, g)$.
+        \item $(f,h) \rightarrow^0 (g, g)$ - para $(g, g)$ nie jest oznaczona, więc sprawdzamy dalej.
+        \item $(f,h) \rightarrow^1 (e, d)$ - para $(e, d)$ jest oznaczona, więc oznaczamy $(f, h)$.
+        \item $(g,h) \rightarrow^0 (f, g)$ - para $(f, g)$ jest oznaczona, więc oznaczamy $(g, h)$.
+    \end{enumerate}
+    
+    Ostatecznie tabela wygląda w ten sposób:
+
+    \begin{table}[h!]
+        \begin{tabular}{cccccccc}
+        b                       & c                      & d                      & e                      & f                      & g                      & h                      &   \\ \cline{1-7}
+        \multicolumn{1}{|c|}{X} & \multicolumn{1}{c|}{X} & \multicolumn{1}{c|}{X} & \multicolumn{1}{c|}{X} & \multicolumn{1}{c|}{X} & \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{X} & a \\ \cline{1-7}
+        \multicolumn{1}{c|}{}   & \multicolumn{1}{c|}{X} & \multicolumn{1}{c|}{X} & \multicolumn{1}{c|}{X} & \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{X} & \multicolumn{1}{c|}{X} & b \\ \cline{2-7}
+                                & \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{X} & \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{X} & \multicolumn{1}{c|}{X} & \multicolumn{1}{c|}{X} & c \\ \cline{3-7}
+                                &                        & \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{X} & \multicolumn{1}{c|}{X} & \multicolumn{1}{c|}{X} & \multicolumn{1}{c|}{X} & d \\ \cline{4-7}
+                                &                        &                        & \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{X} & \multicolumn{1}{c|}{X} & \multicolumn{1}{c|}{X} & e \\ \cline{5-7}
+                                &                        &                        &                        & \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{X} & \multicolumn{1}{c|}{X} & f \\ \cline{6-7}
+                                &                        &                        &                        &                        & \multicolumn{1}{c|}{}  & \multicolumn{1}{c|}{X} & g \\ \cline{7-7}
+        \end{tabular}
+    \end{table}
+    \break
+    Stany $a$ i $g$, $b$ i $f$, $c$ i $e$ są parami równoważne.\hfill\break
+    Stan $h$ nie jest osiągalny ze stanu początkowego, więc możemy go usunąć.
+
+
+\end{document}

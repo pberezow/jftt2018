@@ -256,7 +256,7 @@
 # undef YYERROR_VERBOSE
 # define YYERROR_VERBOSE 1
 #else
-# define YYERROR_VERBOSE 0
+# define YYERROR_VERBOSE 1
 #endif
 
 /* In a future release of Bison, this section will be replaced
@@ -642,7 +642,7 @@ static const yytype_uint16 yyrline[] =
 };
 #endif
 
-#if YYDEBUG || YYERROR_VERBOSE || 0
+#if YYDEBUG || YYERROR_VERBOSE || 1
 /* YYTNAME[SYMBOL-NUM] -- String name of the symbol SYMBOL-NUM.
    First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
@@ -1999,6 +1999,11 @@ int main(int argc, char **argv) {
 	}
 
   	outfile.open(argv[2]);
+	
+	if(!outfile.is_open()) {
+		printf("Nie można utworzyć pliku wyjściowego.\n");
+		return -2;
+	}
 
 	yyin = infile;
 	yyparse();
@@ -2366,7 +2371,9 @@ void handle_program(struct ast* root_node) {
 
 	free_ast(root_node);
 	gen_assembler();
-	print_indirect_code();
+	// print_indirect_code();
+	
+	cout << "Kompilacja zakończona." << endl;
 	
 }
 

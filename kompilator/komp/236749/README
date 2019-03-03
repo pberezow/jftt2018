@@ -1,0 +1,16 @@
+Autor: Piotr Berezowski
+nr indeksu: 236749
+
+Pliki:
+- makefile - kompilacja projektu poleceniem 'make' - plik wynikowy 'kompilator'
+- parser.y - plik BISONa zawierający jednocześnie wszystkie funkcje używane do analizy semantycznej, generujące assembler, kod trójadresowy itd.
+- lexer.l - plik FLEXa
+
+Kompilator był pisanu przy użyciu następujących wersji programów:
+- bison (GNU Bison) 3.0.4
+- flex 2.6.4
+- g++ (Ubuntu 7.3.0-27ubuntu1~18.04) 7.3.0
+
+Uruchamianie programu:
+po wywołaniu polecenia make:
+kompilator <nazwa pliku wejściowego> <nazwa pliku wyjściowego>

@@ -1,0 +1,73 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<script src="{% static 'calendar_app/js/calendar.js' %}"></script>
+<!-- jQuery -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+{% comment %} <!-- jQuery UI -->
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
+crossorigin="anonymous"></script> {% endcomment %}
+<!-- Bootstrap date-picker -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/js/bootstrap-datepicker.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/css/bootstrap-datepicker3.css"/>
+<!-- Icon -->
+{% comment %} <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/> {% endcomment %}
+<!-- Bootstrap CSS -->
+{% comment %} <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous"> {% endcomment %}
+<!-- Materia CSS -->
+<link rel="stylesheet" href="https://bootswatch.com/4/materia/bootstrap.min.css">
+<!-- Yeti CSS -->
+{% comment %} <link rel="stylesheet" href="https://bootswatch.com/4/yeti/bootstrap.min.css"> {% endcomment %}
+<!-- Litera CSS -->
+{% comment %} <link rel="stylesheet" href="https://bootswatch.com/4/litera/bootstrap.min.css"> {% endcomment %}
+{% block imports %}
+{% endblock imports %}
+{% if title %}
+<title>Apps - {{ title }}</title>
+{% else %}
+<title>Apps</title>
+{% endif %}
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+<a class="navbar-brand" href="/">Apps</a>
+<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor03" aria-controls="navbarColor03" aria-expanded="false" aria-label="Toggle navigation">
+<span class="navbar-toggler-icon"></span>
+</button>
+<div class="collapse navbar-collapse" id="navbarColor03">
+<ul class="navbar-nav mr-auto">
+{% for key, value in menu.items %}
+{% if key == active %}
+<li class="nav-item active">
+<a class="nav-link" href="#">{{ key }} <span class="sr-only">(current)</span></a>
+</li>
+{% else %}
+<li class="nav-item">
+<a class="nav-link" href="{{ value }}">{{ key }}</a>
+</li>
+{% endif %}
+{% endfor %}
+</ul>
+<div class="my-2 my-lg-0">
+{% if request.user.is_authenticated %}
+<span style="padding-right: 2em;">Hello, {{ request.user.username }}</span>
+<button onclick="window.location='{% url 'logout' %}'" class="btn btn-secondary my-2 my-sm-0" type="submit">Logout</button>
+{% else %}
+<button onclick="window.location='{% url 'login' %}'" class="btn btn-secondary my-2 my-sm-0" type="submit">Log In</button>
+{% endif %}
+</div>
+{% comment %} <form class="form-inline my-2 my-lg-0">
+<input class="form-control mr-sm-2" type="text" placeholder="Search">
+<button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+</form> {% endcomment %}
+</div>
+</nav>
+{% block content %}
+{% endblock content %}
+</body>
+</html>
