@@ -1,6 +1,0 @@
-http://ki.pwr.edu.pl/gebala/dyd/jftt2018.html
-
-lista 1: (16.10.2018)
-
-docker network prune
-docker network create --gateway 172.18.0.1 --subnet 172.18.0.0/24 backend
